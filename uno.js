@@ -1,3 +1,19 @@
+const numberOfPlayers = 4;
+var gameState = 1;  // When gameState is 0, the game is over
+
+
+// Code to get user inputs in terminal for Node.js
+const readline = require('readline').createInterface({
+    input: process.stdin,
+    output: process.stdout
+});
+
+function ask(question) {
+    return new Promise((resolve) => {
+        readline.question(question, (answer) => resolve(answer));
+    });
+}
+
 class Card {
     
     constructor(color, value) {
@@ -5,7 +21,28 @@ class Card {
         this.value = value;         // number like "1", "2", or the action "skip", "+4", "+2", "reverse", "changecolor"
     }
 
+    toString() {
+        return this.color + " " + this.value;
+    }
+
 // We can access card information by doing card.color and card.value
+
+}
+
+class Player {
+
+    constructor(id, hand){
+        this.id = id;           // To identify if this is player 1, 2, or 3
+        this.hand = hand;
+    }
+
+    play(index) {
+
+        console.log("Player " + (this.id + 1).toString() + " places a " + this.hand[index].color + " " + this.hand[index].value);
+
+        this.hand.splice(index, 1);
+
+    }
 
 }
 
@@ -50,3 +87,92 @@ function shuffle(array) {
     }
 
 }
+
+function dealHands(deck, numberOfPlayers = 4, cardsPerPlayer = 7) {
+    
+    const arrayOfHands = [];    // Array that contains an array of everyone's hand
+
+    for (let i = 0; i < numberOfPlayers; i++) {
+        arrayOfHands.push([]);
+        for (let j = 0; j < cardsPerPlayer; j++) {
+            arrayOfHands[i][j] = deck.pop();
+        }
+    }
+
+    return arrayOfHands;
+}
+
+function printHand(hand) {
+    for (let i = 0; i < hand.length; i++) {
+        console.log(i + ' ' + hand[i])
+    }
+    console.log();
+}
+
+
+async function main() {
+    deck = createDeck();
+    hands = dealHands(deck, numberOfPlayers);
+
+    // for (index in hands){
+    //     printHand(hands[index])
+    // }
+
+    // console.log(deck.length)
+
+    // Creating players
+    const players = []
+    for (let i = 0; i < numberOfPlayers; i++) {
+        players.push(new Player(i, hands[i]));
+    }
+
+    discardPile = [];
+    discardPile.push(deck.pop());
+
+    var counter = 0;    // Counter that goes up each turn. Only used for testing purposes.
+    var tracker = 0;    // Tracker keeps track of what player's turn it is.
+
+    while (gameState != 0 && counter < 10) {
+
+        tracker = tracker % numberOfPlayers;
+
+        console.log('\nCard on top of discard pile:')
+        console.log(discardPile[0]);
+        console.log('\nPlayer ' + (tracker + 1) + ' choose your card:')
+        printHand(players[tracker].hand);
+        
+        var valid = 0
+
+        while (valid == 0) {
+            const choice = parseInt(await ask("Choose the index of the card to play:"));
+
+            if (choice >= players[tracker].hand.length || choice < 0) {
+                console.log("Pick a valid card. Index is not valid.\n")
+            }
+            else if (players[tracker].hand[choice].color == discardPile[0].color || players[tracker].hand[choice].color == "wild" || players[tracker].hand[choice].value == discardPile[0].value){
+                valid = 1;
+
+                // Place card previously on top of discard pile into deck randomly
+                deck.push(discardPile[0]);
+                tempRandomIndex = Math.floor(Math.random() * (deck.length - 1));
+                [deck[deck.length-1], deck[tempRandomIndex]] = [deck[tempRandomIndex], deck[deck.length-1]];
+
+                // Place played card into discard pile
+                discardPile[0] = players[tracker].hand[choice];
+                players[tracker].play(choice);
+            }
+            else {
+                console.log("Card cannot be played.\n")
+            }
+        
+        }
+
+        tracker++;
+        counter++;
+        valid = 0;
+
+    }
+
+}
+
+main();
