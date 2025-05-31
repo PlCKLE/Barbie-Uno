@@ -86,18 +86,10 @@ function shuffle(array) {
 
 }
 
-function dealHands(deck, numberOfPlayers = 4, cardsPerPlayer = 7) {
-    
-    const arrayOfHands = [];    // Array that contains an array of everyone's hand
-
-    for (let i = 0; i < numberOfPlayers; i++) {
-        arrayOfHands.push([]);
-        for (let j = 0; j < cardsPerPlayer; j++) {
-            arrayOfHands[i][j] = deck.pop();
-        }
+function deal(deck, player, cardsDealt) {
+    for (let dealtIterator = 0; dealtIterator < cardsDealt, dealtIterator ++;) {
+        player.hand.push(deck.pop());
     }
-
-    return arrayOfHands;
 }
 
 function printHand(hand) {
@@ -110,7 +102,6 @@ function printHand(hand) {
 
 async function main() {
     deck = createDeck();
-    hands = dealHands(deck, numberOfPlayers);
 
     // for (index in hands){
     //     printHand(hands[index])
@@ -121,7 +112,12 @@ async function main() {
     // Creating players
     const players = []
     for (let i = 0; i < numberOfPlayers; i++) {
-        players.push(new Player(i, hands[i]));
+        players.push(new Player(i, []));
+    }
+
+    //Deals 7 cards to all players
+    for(let playerIndex = 0; playerIndex < players.length; playerIndex ++) {
+        deal(deck,players[playerIndex],7)
     }
 
     discardPile = [];
