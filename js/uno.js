@@ -15,7 +15,11 @@ function ask(question) {
 }
 
 class Card {
-    
+
+    static COLORS = ["red", "green", "blue", "yellow", "wild"];
+    static VALUES = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "skip", "reverse", "+2"];
+    static SPECIAL = ["changecolor", "+4"];
+
     constructor(color, value) {
         this.color = color;         // red, green, blue, yellow, wild
         this.value = value;         // number like "1", "2", or the action "skip", "+4", "+2", "reverse", "changecolor"
@@ -48,28 +52,22 @@ class Player {
 
 function createDeck() {
     // Creates array of 108 randomly shuffled cards.
-
-    const colors = ["red", "green", "blue", "yellow", "wild"];
-    const values = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "skip", "reverse", "+2"];
-    const special = ["changecolor", "+4"];
-    
     const deck = [];
+    for (let i = 0; i < Card.COLORS.length - 1; i++) {
 
-    for (let i = 0; i < colors.length - 1; i++) {
+        deck.push(new Card(Card.COLORS[i], "0"));      // Each color only has one zero card
 
-        deck.push(new Card(colors[i], "0"));      // Each color only has one zero card
-
-        for (let j = 1; j < values.length; j++) {
-            deck.push(new Card(colors[i], values[j]));
-            deck.push(new Card(colors[i], values[j]));
+        for (let j = 1; j < Card.VALUES.length; j++) {
+            deck.push(new Card(Card.COLORS[i], Card.VALUES[j]));
+            deck.push(new Card(Card.COLORS[i], Card.VALUES[j]));
         }
 
     }
 
-    for (let i = 0; i < special.length; i++) {
+    for (let i = 0; i < Card.SPECIAL.length; i++) {
         
         for (let j = 0; j < 4; j++) {
-            deck.push(new Card("wild", special[i]));
+            deck.push(new Card("wild", Card.SPECIAL[i]));
         }
     
     }
