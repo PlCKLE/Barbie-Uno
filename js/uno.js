@@ -99,6 +99,42 @@ function printHand(hand) {
     console.log();
 }
 
+function randomInsert(deck, card) {
+    // Inserts card randomly into deck
+    deck.push(card);
+    tempRandomIndex = Math.floor(Math.random() * (deck.length - 1));
+    [deck[deck.length-1], deck[tempRandomIndex]] = [deck[tempRandomIndex], deck[deck.length-1]];
+}
+
+
+function isValidPlay(cardOnPile, cardPlayed) {
+    // Checks if it is valid to play cardPlayed on cardOnPile
+    return (cardPlayed.color == cardOnPile.color || cardPlayed.color == "wild" || cardPlayed.value == cardOnPile.value)
+}
+
+function drawCard(player, deck, discardPile) {
+    // Makes a player draw one card. If the card is valid play, it is automatically played. If it can't be played, it is kept by the player.
+    tempCard = deck.pop();
+    
+    if (isValidPlay(discardPile[0], tempCard)) {
+        randomInsert(deck, discardPile[0]);
+        discardPile[0] = tempCard;
+        console.log("Player " + (player.id + 1).toString() + " draws and places a " + tempCard.color + " " + tempCard.value);
+        return 1;
+    }
+    else {
+        player.hand.push(tempCard);
+        console.log("Card drawn: " + tempCard);
+        return 0;    
+    }
+}
+
+function stupidDrawCard(player, deck) {
+    // Makes a player draw one card. Doesn't check if the card is a valid play (used for stuff like +2s and +4s)
+    tempCard = deck.pop();
+    player.hand.push(tempCard);
+    console.log("Card drawn: " + tempCard);
+}
 
 async function main() {
     deck = createDeck();
@@ -126,43 +162,166 @@ async function main() {
 
     var counter = 0;    // Counter that goes up each turn. Only used for testing purposes.
     var tracker = 0;    // Tracker keeps track of what player's turn it is.
+    var direction = 1;   // Tracks the direction we're going in. 1 for incrementing and -1 for decrementing.
+    var pendingCards = 0;   // How many cards are pending to be drawn by a player?
 
-    while (gameState != 0 && counter < 10) {
-
-        tracker = tracker % numberOfPlayers;
+    while (gameState != 0) {
+        
+        if (tracker < 0) {
+            tracker = Math.abs((tracker + numberOfPlayers) % numberOfPlayers);  // If it's negative, add numberOfPlayers to bring it back in bounds and make the modulo properly loop
+        }
+        else {tracker = Math.abs(tracker % numberOfPlayers);}
 
         console.log('\nCard on top of discard pile:')
         console.log(discardPile[0]);
         console.log('\nPlayer ' + (tracker + 1) + ' choose your card:')
+        console.log("-1 Draw cards")
         printHand(players[tracker].hand);
         
         var valid = 0
 
-        while (valid == 0) {
-            const choice = parseInt(await ask("Choose the index of the card to play:"));
+        if (pendingCards < 1) {
+            while (valid == 0) {
+                const choice = parseInt(await ask("Choose the index of the card to play:"));
 
-            if (choice >= players[tracker].hand.length || choice < 0) {
-                console.log("Pick a valid card. Index is not valid.\n")
-            }
-            else if (players[tracker].hand[choice].color == discardPile[0].color || players[tracker].hand[choice].color == "wild" || players[tracker].hand[choice].value == discardPile[0].value){
-                valid = 1;
+                if (choice >= players[tracker].hand.length || choice < -1) {
+                    console.log("Pick an option. Index is not valid.\n")
+                }// Invalid selection
 
-                // Place card previously on top of discard pile into deck randomly
-                deck.push(discardPile[0]);
-                tempRandomIndex = Math.floor(Math.random() * (deck.length - 1));
-                [deck[deck.length-1], deck[tempRandomIndex]] = [deck[tempRandomIndex], deck[deck.length-1]];
+                else if (choice == -1){
+                    
+                    while (valid == 0) {    // Loop is done until a valid card is drawn and played
+                        
+                        valid = drawCard(players[tracker], deck, discardPile);
 
-                // Place played card into discard pile
-                discardPile[0] = players[tracker].hand[choice];
-                players[tracker].play(choice);
+                        // Behavior of special cards (in case player draws a reverse, skip, +2, etc)
+                        switch(discardPile[0].value) {
+
+                        case "reverse":
+                            direction = -1*direction;
+                            if (tracker < 0) {
+                                tracker = Math.abs((tracker + numberOfPlayers) % numberOfPlayers);  // If it's negative, add numberOfPlayers to bring it back in bounds and make the modulo properly loop
+                            }
+                            else {tracker = Math.abs(tracker % numberOfPlayers);}
+
+                            break;
+
+                        case "skip":
+                            tracker = tracker + direction;
+                            if (tracker < 0) {
+                                tracker = Math.abs((tracker + numberOfPlayers) % numberOfPlayers);  // If it's negative, add numberOfPlayers to bring it back in bounds and make the modulo properly loop
+                            }
+                            else {tracker = Math.abs(tracker % numberOfPlayers);}
+
+                            break;
+
+                        case "+2":
+                            pendingCards += 2;
+                            break;
+                        default:
+
+                        }
+                    }
+
+                }// End of drawing logic
+                        
+                else if (isValidPlay(discardPile[0], players[tracker].hand[choice])){
+                    
+                    valid = 1;
+
+                    // Place card previously on top of discard pile into deck randomly
+                    randomInsert(deck, discardPile[0])
+
+                    // Place played card into discard pile
+                    discardPile[0] = players[tracker].hand[choice];
+                    players[tracker].play(choice);
+
+                    // Behavior of special cards
+                    switch(discardPile[0].value) {
+                        case "reverse":
+                            direction = -1*direction;
+                            if (tracker < 0) {
+                                tracker = Math.abs((tracker + numberOfPlayers) % numberOfPlayers);  // If it's negative, add numberOfPlayers to bring it back in bounds and make the modulo properly loop
+                            }
+                            else {tracker = Math.abs(tracker % numberOfPlayers);}
+                            break;
+                        
+                        case "skip":
+                            tracker = tracker + direction;
+                            if (tracker < 0) {
+                                tracker = Math.abs((tracker + numberOfPlayers) % numberOfPlayers);  // If it's negative, add numberOfPlayers to bring it back in bounds and make the modulo properly loop
+                            }
+                            else {tracker = Math.abs(tracker % numberOfPlayers);}
+                            break;
+
+                        case "+2":
+                            pendingCards += 2;
+                            break;
+                        default:
+
+                    }
+
+                }
+                else {
+                    console.log("Card cannot be played.\n")
+                }
+            
             }
-            else {
-                console.log("Card cannot be played.\n")
-            }
+        } // While loop for standard turn (no +2s or +4s)
         
+        else {
+            console.log("Play a +2 to counter or draw " + pendingCards + " cards.");
+            
+            while (valid == 0) {
+                const choice = parseInt(await ask("Choose the index of the card to play:"));
+
+                if (choice >= players[tracker].hand.length || choice < -1) {
+                    console.log("Pick an option. Index is not valid.\n")
+                }// Invalid selection
+
+                else if (choice == -1){
+                    
+                    while (pendingCards > 0) {    // Loop is done until a valid card is drawn and played
+                        pendingCards--;
+                        stupidDrawCard(players[tracker], deck);
+                    }
+
+                } // End of drawing logic
+                        
+                else if (players[tracker].hand[choice].value == "+2"){
+                    
+                    valid = 1;
+
+                    // Place card previously on top of discard pile into deck randomly
+                    randomInsert(deck, discardPile[0])
+
+                    // Place played card into discard pile
+                    discardPile[0] = players[tracker].hand[choice];
+                    players[tracker].play(choice);
+
+                    pendingCards += 2; // Add two cards for the next player
+
+                }
+                else {
+                    console.log("Card cannot be played.\n")
+                }
+            
+            } // While loop for countering a +2
         }
 
-        tracker++;
+        if (players[tracker].hand.length == 0) {
+            gameState = 0;
+            console.log("Player " + players[tracker].id + " wins.");
+        }
+
+
+        if (direction == 1) {
+            tracker++;
+        }
+        else {
+            tracker--;
+        }
+
         counter++;
         valid = 0;
 
