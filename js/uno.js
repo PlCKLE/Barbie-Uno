@@ -87,7 +87,7 @@ function shuffle(array) {
 }
 
 function deal(deck, player, cardsDealt) {
-    for (let dealtIterator = 0; dealtIterator < cardsDealt, dealtIterator ++;) {
+    for (let dealtIterator = 0; dealtIterator < cardsDealt; dealtIterator ++) {
         player.hand.push(deck.pop());
     }
 }
@@ -111,6 +111,7 @@ async function main() {
 
     // Creating players
     const players = []
+
     for (let i = 0; i < numberOfPlayers; i++) {
         players.push(new Player(i, []));
     }
