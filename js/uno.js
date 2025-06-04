@@ -107,16 +107,21 @@ function randomInsert(deck, card) {
 }
 
 
-function isValidPlay(cardOnPile, cardPlayed) {
-    // Checks if it is valid to play cardPlayed on cardOnPile
-    return (cardPlayed.color == cardOnPile.color || cardPlayed.color == "wild" || cardPlayed.value == cardOnPile.value)
+function isValidPlay(cardOnPile, cardPlayed, tempColor) {
+    // Checks if it is valid to play cardPlayed on cardOnPile. tempColor is used for special cards
+    if (cardOnPile.color != "wild") {
+        return (cardPlayed.color == cardOnPile.color || cardPlayed.color == "wild" || cardPlayed.value == cardOnPile.value)
+    }
+    else {
+        return (cardPlayed.color == tempColor || cardPlayed.color == "wild")
+    }
 }
 
-function drawCard(player, deck, discardPile) {
+function drawCard(player, deck, discardPile, tempColor) {
     // Makes a player draw one card. If the card is valid play, it is automatically played. If it can't be played, it is kept by the player.
     tempCard = deck.pop();
     
-    if (isValidPlay(discardPile[0], tempCard)) {
+    if (isValidPlay(discardPile[0], tempCard, tempColor)) {
         randomInsert(deck, discardPile[0]);
         discardPile[0] = tempCard;
         console.log("Player " + (player.id + 1).toString() + " draws and places a " + tempCard.color + " " + tempCard.value);
@@ -134,6 +139,31 @@ function stupidDrawCard(player, deck) {
     tempCard = deck.pop();
     player.hand.push(tempCard);
     console.log("Card drawn: " + tempCard);
+}
+
+async function changeColor() {
+    console.log("0 Red\n1 Green\n2 Blue\n3 Yellow")
+    const choice = parseInt(await ask("Pick the index of the color you to switch to:"));
+    if (choice < 0 || choice > 3) {
+        console.log("\nInvaild selection.");
+        return changeColor();
+    }
+    else {
+        switch (choice) {
+            case 0:
+                console.log("Color changed to red.");
+                return "red";
+            case 1:
+                console.log("Color changed to green.");
+                return "green";
+            case 2:
+                console.log("Color changed to blue.");
+                return "blue";
+            default:
+                console.log("Color changed to yellow.");
+                return "yellow";
+        }
+    }
 }
 
 async function main() {
@@ -159,11 +189,16 @@ async function main() {
 
     discardPile = [];
     discardPile.push(deck.pop());
+    while (discardPile[0].color == "wild" || discardPile[0].value == "+2" || discardPile[0].value == "skip" || discardPile[0].value == "reverse") {
+        randomInsert(discardPile[0]);
+        discardPile[0] = deck.pop();
+    }
 
     var counter = 0;    // Counter that goes up each turn. Only used for testing purposes.
     var tracker = 0;    // Tracker keeps track of what player's turn it is.
     var direction = 1;   // Tracks the direction we're going in. 1 for incrementing and -1 for decrementing.
     var pendingCards = 0;   // How many cards are pending to be drawn by a player?
+    var tempColor; // Cards that change color create a tempColor on top of the discard pile
 
     while (gameState != 0) {
         
@@ -174,6 +209,9 @@ async function main() {
 
         console.log('\nCard on top of discard pile:')
         console.log(discardPile[0]);
+        if (discardPile[0].color == "wild") {
+            console.log("Current color of wild is " + tempColor + ".");
+        }
         console.log('\nPlayer ' + (tracker + 1) + ' choose your card:')
         console.log("-1 Draw cards")
         printHand(players[tracker].hand);
@@ -192,7 +230,7 @@ async function main() {
                     
                     while (valid == 0) {    // Loop is done until a valid card is drawn and played
                         
-                        valid = drawCard(players[tracker], deck, discardPile);
+                        valid = drawCard(players[tracker], deck, discardPile, tempColor);
 
                         // Behavior of special cards (in case player draws a reverse, skip, +2, etc)
                         switch(discardPile[0].value) {
@@ -218,6 +256,11 @@ async function main() {
                         case "+2":
                             pendingCards += 2;
                             break;
+
+                        case "changecolor":
+                            tempColor = await changeColor();
+                            break;
+                            
                         default:
 
                         }
@@ -225,7 +268,7 @@ async function main() {
 
                 }// End of drawing logic
                         
-                else if (isValidPlay(discardPile[0], players[tracker].hand[choice])){
+                else if (isValidPlay(discardPile[0], players[tracker].hand[choice], tempColor)){
                     
                     valid = 1;
 
@@ -257,6 +300,16 @@ async function main() {
                         case "+2":
                             pendingCards += 2;
                             break;
+
+                        case "changecolor":
+                            tempColor = await changeColor();
+                            break;
+
+                        case "+4":
+                            tempColor = await changeColor();
+                            pendingCards += 4;
+                            break;
+
                         default:
 
                     }
@@ -266,8 +319,54 @@ async function main() {
                     console.log("Card cannot be played.\n")
                 }
             
-            }
-        } // While loop for standard turn (no +2s or +4s)
+                }
+            } // If statement for if a +2 was played
+        
+        else if (discardPile[0].color == "wild"){ // Only runs when pending card > 0 and it's a wild card (+4)
+
+            console.log("Play a +4 to counter or draw " + pendingCards + " cards.");
+            
+            while (valid == 0) {
+                const choice = parseInt(await ask("Choose the index of the card to play:"));
+
+                if (choice >= players[tracker].hand.length || choice < -1) {
+                    console.log("Pick an option. Index is not valid.\n")
+                }// Invalid selection
+
+                else if (choice == -1){
+                    
+                    while (pendingCards > 0) {    // Loop is done until a valid card is drawn and played
+                        pendingCards--;
+                        stupidDrawCard(players[tracker], deck);
+                        valid = 1
+                    }
+
+                } // End of drawing logic
+                        
+                else if (players[tracker].hand[choice].value == "+4"){
+                    
+                    valid = 1;
+
+                    // Place card previously on top of discard pile into deck randomly
+                    randomInsert(deck, discardPile[0])
+
+                    // Place played card into discard pile
+                    discardPile[0] = players[tracker].hand[choice];
+                    players[tracker].play(choice);
+
+                    pendingCards += 4; // Add four cards for the next player
+
+                    tempColor = changeColor();
+
+                }
+                else {
+                    console.log("Card cannot be played.\n")
+                }
+            
+            } // While loop for countering a +4
+
+
+        }
         
         else {
             console.log("Play a +2 to counter or draw " + pendingCards + " cards.");
@@ -284,6 +383,7 @@ async function main() {
                     while (pendingCards > 0) {    // Loop is done until a valid card is drawn and played
                         pendingCards--;
                         stupidDrawCard(players[tracker], deck);
+                        valid = 1;
                     }
 
                 } // End of drawing logic
@@ -307,6 +407,11 @@ async function main() {
                 }
             
             } // While loop for countering a +2
+        }
+
+        if (players[tracker].hand.length == 1) {
+            gameState = 0;
+            console.log("Player " + players[tracker].id + " has an UNO.");
         }
 
         if (players[tracker].hand.length == 0) {
