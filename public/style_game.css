@@ -1,0 +1,46 @@
+body {
+    font-family: Verdana;
+    padding: 20px;
+    background-color: #F0EFEB;
+    padding-bottom: 100px;
+}
+
+/* #barbie will use this formatting for anything
+that has id="barbie" in its tag*/
+
+#start {
+    display: block;
+    margin-bottom: 60px;
+}
+
+#red {
+    font-family: "Comic Sans MS", cursive, sans-serif;
+    padding: 20px;
+    text-align: center;
+    text-shadow: 0 0 2px #250202;
+    color:rgb(255, 57, 143) 
+}
+
+#blue {
+    font-family: "Comic Sans MS", cursive, sans-serif;
+    padding: 20px;
+    text-align: center;
+    text-shadow: 0 0 2px #250202;
+    color:rgb(129, 88, 253) 
+}
+
+#green {
+    font-family: "Comic Sans MS", cursive, sans-serif;
+    padding: 20px;
+    text-align: center;
+    text-shadow: 0 0 2px #250202;
+    color:rgb(77, 255, 148) 
+}
+
+#yellow {
+    font-family: "Comic Sans MS", cursive, sans-serif;
+    padding: 20px;
+    text-align: center;
+    text-shadow: 0 0 2px #250202;
+    color:rgb(255, 235, 57) 
+}
