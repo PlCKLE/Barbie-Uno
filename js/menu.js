@@ -2,6 +2,7 @@ const title = document.getElementById('title');
 const startButton = document.getElementById('start');
 const startMessage = document.getElementById('start_message');
 const output = document.getElementById('output');
+localStorage.clear();
 
 let tempFunction = null;
 
@@ -127,7 +128,7 @@ async function main() {
     clearScreen();
 
     const playerNumberConfirmation = document.createElement('h2');
-    playerNumberConfirmation.textContent = numberOfPlayers + ' players will be playing.'
+    playerNumberConfirmation.textContent = numberOfPlayers + ' players will be playing.';
     document.body.appendChild(playerNumberConfirmation);
 
     localStorage.setItem('numPlayers', numberOfPlayers);

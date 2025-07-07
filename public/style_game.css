@@ -13,34 +13,119 @@ that has id="barbie" in its tag*/
     margin-bottom: 60px;
 }
 
+
 #red {
     font-family: "Comic Sans MS", cursive, sans-serif;
     padding: 20px;
+    font-size: 35px;
     text-align: center;
     text-shadow: 0 0 2px #250202;
-    color:rgb(255, 57, 143) 
+    color:rgb(255, 57, 143); 
+}
+
+#red_button {
+    border: none;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 25px;
+    font-family: "Comic Sans MS", cursive, sans-serif;
+    margin: 4px 2px;
+    cursor: pointer;
+    background-color: rgb(255, 57, 143);
 }
 
 #blue {
     font-family: "Comic Sans MS", cursive, sans-serif;
     padding: 20px;
+    font-size: 35px;
     text-align: center;
     text-shadow: 0 0 2px #250202;
-    color:rgb(129, 88, 253) 
+    color:rgb(129, 88, 253);
+}
+
+#blue_button {
+    border: none;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 25px;
+    font-family: "Comic Sans MS", cursive, sans-serif;
+    margin: 4px 2px;
+    cursor: pointer;
+    background-color: rgb(129, 88, 253);
 }
 
 #green {
     font-family: "Comic Sans MS", cursive, sans-serif;
     padding: 20px;
+    font-size: 35px;
     text-align: center;
     text-shadow: 0 0 2px #250202;
-    color:rgb(77, 255, 148) 
+    color:rgb(77, 255, 148); 
 }
+
+#green_button {
+    border: none;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 25px;
+    font-family: "Comic Sans MS", cursive, sans-serif;
+    margin: 4px 2px;
+    cursor: pointer;
+    background-color: rgb(77, 255, 148);
+}
+
 
 #yellow {
     font-family: "Comic Sans MS", cursive, sans-serif;
     padding: 20px;
+    font-size: 35px;    
     text-align: center;
     text-shadow: 0 0 2px #250202;
     color:rgb(255, 235, 57) 
+}
+
+#yellow_button {
+    border: none;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 25px;
+    font-family: "Comic Sans MS", cursive, sans-serif;
+    margin: 4px 2px;
+    cursor: pointer;
+    background-color: rgb(255, 235, 57);
+}
+
+#wild {
+    font-family: "Comic Sans MS", cursive, sans-serif;
+    padding: 20px;
+    font-size: 35px;    
+    text-align: center;
+    text-shadow: 0 0 2px #250202;
+    color:rgb(71, 84, 82) 
+}
+
+#wild_button {
+    border: none;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 25px;
+    font-family: "Comic Sans MS", cursive, sans-serif;
+    margin: 4px 2px;
+    cursor: pointer;
+    background-color: rgb(71, 84, 82);
 }

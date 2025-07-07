@@ -1,23 +1,23 @@
-const numberOfPlayers = localStorage.getItem('numPlayers');     // Gets variable stored in local storage from menu.js
-var gameState = 1;  // When gameState is 0, the game is over
+const numberOfPlayers = parseInt(localStorage.getItem('numPlayers'));     // Gets variable stored in local storage from menu.js
+var gameState = 1;  // 1 for UNO screen, 2 for POINTS screen, 0 for GAME FINISHED screen
 
 
 // Get user input
-let questionText;
+// let questionText;
 
-function ask(question) {
+// function ask(question) {
     
-    return new Promise((resolve) => {
-        questionText.textContent = question + ' ';
-        questionInput.value = '';
-        questionInput.focus();
+//     return new Promise((resolve) => {
+//         questionText.textContent = question + ' ';
+//         questionInput.value = '';
+//         questionInput.focus();
 
-        questionInput.addEventListener('keydown', (event) =>{
-            if (event.key == 'Enter') {resolve(questionInput.value);}
-        }
+//         questionInput.addEventListener('keydown', (event) =>{
+//             if (event.key == 'Enter') {resolve(questionInput.value);}
+//         }
         
-        )}
-    )};
+//         )}
+//     )};
 
 class Card {
 
@@ -46,11 +46,7 @@ class Player {
     }
 
     play(index) {
-
-        console.log("Player " + (this.id + 1).toString() + " places a " + this.hand[index].color + " " + this.hand[index].value);
-
         this.hand.splice(index, 1);
-
     }
 
 }
@@ -98,10 +94,21 @@ function deal(deck, player, cardsDealt) {
 }
 
 function printHand(hand) {
-    for (let i = 0; i < hand.length; i++) {
-        console.log(i + ' ' + hand[i])
+    const cardButtons = new Array(hand.length);
+    
+    const bodyChildren = Array.from(document.body.children);
+    for (const child of bodyChildren) {
+        if (child.tagName == 'button') {
+        child.remove();     // remove all previous buttons on screen
+        }
     }
-    console.log();
+
+    for (let i = 0; i < hand.length; i++) {
+        cardButtons[i] = document.createElement('button');
+        cardButtons[i].textContent = hand[i].value;
+        cardButtons[i].id = hand[i].color + '_button';
+        document.body.appendChild(cardButtons[i]);
+    }
 }
 
 function randomInsert(deck, card) {
@@ -141,9 +148,9 @@ function drawCard(player, deck, discardPile, tempColor) {
 
 function stupidDrawCard(player, deck) {
     // Makes a player draw one card. Doesn't check if the card is a valid play (used for stuff like +2s and +4s)
-    tempCard = deck.pop();
+    let tempCard = deck.pop();
     player.hand.push(tempCard);
-    console.log("Card drawn: " + tempCard);
+    // console.log("Card drawn: " + tempCard);
 }
 
 async function changeColor() {
@@ -172,22 +179,12 @@ async function changeColor() {
 }
 
 async function game() {
-    
-    const title1 = document.createElement('h1');
-    title1.textContent = 'Gameplay.';
-    title1.style.textAlign = 'center';
-    title1.style.marginBottom = '40';
-    document.body.appendChild(title1);
 
-    const questionText = document.createElement('label');
-    questionText.htmlFor ='questionInput';
-    const questionInput = document.createElement('input');
-    questionInput.id = 'questionInput';
-    questionInput.type = 'int';
-    document.body.appendChild(questionText);
-    document.body.appendChild(questionInput);
+    const top = document.getElementById('top');
+    top.textContent = numberOfPlayers;
 
-    deck = createDeck();
+
+    let deck = createDeck();
     
     // Creating players
     const players = []
@@ -201,10 +198,10 @@ async function game() {
         deal(deck,players[playerIndex],7)
     }
 
-    discardPile = [];
+    let discardPile = [];
     discardPile.push(deck.pop());
     while (discardPile[0].color == "wild" || discardPile[0].value == "+2" || discardPile[0].value == "skip" || discardPile[0].value == "reverse") {
-        randomInsert(discardPile[0]);
+        randomInsert(deck, discardPile[0]);
         discardPile[0] = deck.pop();
     }
 
@@ -213,6 +210,7 @@ async function game() {
     var direction = 1;   // Tracks the direction we're going in. 1 for incrementing and -1 for decrementing.
     var pendingCards = 0;   // How many cards are pending to be drawn by a player?
     var tempColor; // Cards that change color create a tempColor on top of the discard pile
+    const playerTrackerText = document.getElementById('playersTurnText');
 
     while (gameState != 0) {
         
@@ -226,7 +224,8 @@ async function game() {
         if (discardPile[0].color == "wild") {
             console.log("Current color of wild is " + tempColor + ".");
         }
-        console.log('\nPlayer ' + (tracker + 1) + ' choose your card:')
+        const playerTrackerText = document.getElementById('playersTurnText');
+        playerTrackerText.textContent = 'Player ' + (tracker + 1) + ' choose your card:'
         console.log("-1 Draw cards")
         printHand(players[tracker].hand);
         
@@ -448,4 +447,28 @@ async function game() {
 
 }
 
-game();
+function clearScreen() {
+    const bodyChildren = Array.from(document.body.children);
+    for (const child of bodyChildren) {
+        if (child.tagName !== 'SCRIPT') {
+        child.remove();
+        }
+    }
+}
+
+async function main() {
+
+    if (!Number.isInteger(numberOfPlayers) || numberOfPlayers < 2) {
+        clearScreen();
+        const warning = document.createElement('h1');
+        warning.textContent = "You must go through the menu first.";
+        document.body.appendChild(warning);
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        window.location.replace("menu.html");
+    } else {
+        game();
+    }
+
+}
+
+document.addEventListener("DOMContentLoaded", main);
