@@ -1,6 +1,6 @@
 const numberOfPlayers = parseInt(localStorage.getItem('numPlayers'));     // Gets variable stored in local storage from menu.js
 var gameState = 1;  // 1 for UNO screen, 2 for POINTS screen, 0 for GAME FINISHED screen
-
+let tempFunction = null; // set to null whenever a button isn't meant to be pressed, set to resolve when a button is meant to be pressed
 
 // Get user input
 // let questionText;
@@ -18,6 +18,12 @@ var gameState = 1;  // 1 for UNO screen, 2 for POINTS screen, 0 for GAME FINISHE
         
 //         )}
 //     )};
+
+function ask(question) {
+    return new Promise((resolve) => {
+        tempFunction = resolve;
+    })
+}
 
 class Card {
 
@@ -91,24 +97,32 @@ function deal(deck, player, cardsDealt) {
     for (let dealtIterator = 0; dealtIterator < cardsDealt; dealtIterator ++) {
         player.hand.push(deck.pop());
     }
-}
+} 
 
 function printHand(hand) {
     const cardButtons = new Array(hand.length);
-    
-    const bodyChildren = Array.from(document.body.children);
-    for (const child of bodyChildren) {
-        if (child.tagName == 'button') {
-        child.remove();     // remove all previous buttons on screen
-        }
+    const playerHandDiv = document.getElementById('playerHand');    // html division
+
+    while (playerHandDiv.firstChild) {
+        playerHandDiv.firstChild.remove();     // removes all previous buttons on screen
     }
 
     for (let i = 0; i < hand.length; i++) {
         cardButtons[i] = document.createElement('button');
         cardButtons[i].textContent = hand[i].value;
         cardButtons[i].id = hand[i].color + '_button';
-        document.body.appendChild(cardButtons[i]);
+        cardButtons[i].dataset.index = i;   // Creates a property for the button called "index"
+        
+        cardButtons[i].addEventListener('click', () => {
+        if (tempFunction) { // true when tempFunction is set to a function and not null or undefined
+            tempFunction(Number(cardButtons[i].dataset.index));
+            tempFunction = null;
+        }
+        
+        });
+        playerHandDiv.appendChild(cardButtons[i]);
     }
+
 }
 
 function randomInsert(deck, card) {
@@ -180,10 +194,6 @@ async function changeColor() {
 
 async function game() {
 
-    const top = document.getElementById('top');
-    top.textContent = numberOfPlayers;
-
-
     let deck = createDeck();
     
     // Creating players
@@ -211,6 +221,7 @@ async function game() {
     var pendingCards = 0;   // How many cards are pending to be drawn by a player?
     var tempColor; // Cards that change color create a tempColor on top of the discard pile
     const playerTrackerText = document.getElementById('playersTurnText');
+    const topOfPile = document.getElementById('top');
 
     while (gameState != 0) {
         
@@ -221,8 +232,13 @@ async function game() {
 
         console.log('\nCard on top of discard pile:')
         console.log(discardPile[0]);
+
+        topOfPile.id = discardPile[0].color;
+        topOfPile.textContent = discardPile[0].value;
+
         if (discardPile[0].color == "wild") {
             console.log("Current color of wild is " + tempColor + ".");
+            topOfPile.id = tempColor;
         }
         const playerTrackerText = document.getElementById('playersTurnText');
         playerTrackerText.textContent = 'Player ' + (tracker + 1) + ' choose your card:'

@@ -26,14 +26,17 @@ that has id="barbie" in its tag*/
 #red_button {
     border: none;
     color: white;
-    padding: 15px 32px;
+    padding: 40px 30px;
     text-align: center;
+    justify-content: center;
+    margin: auto;
     text-decoration: none;
     display: inline-block;
     font-size: 25px;
     font-family: "Comic Sans MS", cursive, sans-serif;
     margin: 4px 2px;
     cursor: pointer;
+    border-radius: 20px;
     background-color: rgb(255, 57, 143);
 }
 
@@ -49,14 +52,17 @@ that has id="barbie" in its tag*/
 #blue_button {
     border: none;
     color: white;
-    padding: 15px 32px;
+    padding: 40px 30px;
     text-align: center;
+    justify-content: center;
+    margin: auto;
     text-decoration: none;
     display: inline-block;
     font-size: 25px;
     font-family: "Comic Sans MS", cursive, sans-serif;
     margin: 4px 2px;
     cursor: pointer;
+    border-radius: 20px;
     background-color: rgb(129, 88, 253);
 }
 
@@ -72,14 +78,17 @@ that has id="barbie" in its tag*/
 #green_button {
     border: none;
     color: white;
-    padding: 15px 32px;
+    padding: 40px 30px;
     text-align: center;
+    justify-content: center;
+    margin: auto;
     text-decoration: none;
     display: inline-block;
     font-size: 25px;
     font-family: "Comic Sans MS", cursive, sans-serif;
     margin: 4px 2px;
     cursor: pointer;
+    border-radius: 20px;
     background-color: rgb(77, 255, 148);
 }
 
@@ -96,14 +105,17 @@ that has id="barbie" in its tag*/
 #yellow_button {
     border: none;
     color: white;
-    padding: 15px 32px;
+    padding: 40px 30px;
     text-align: center;
+    justify-content: center;
+    margin: auto;
     text-decoration: none;
     display: inline-block;
     font-size: 25px;
     font-family: "Comic Sans MS", cursive, sans-serif;
     margin: 4px 2px;
     cursor: pointer;
+    border-radius: 20px;
     background-color: rgb(255, 235, 57);
 }
 
@@ -119,13 +131,16 @@ that has id="barbie" in its tag*/
 #wild_button {
     border: none;
     color: white;
-    padding: 15px 32px;
+    padding: 40px 30px;
     text-align: center;
+    justify-content: center;
+    margin: auto;
     text-decoration: none;
     display: inline-block;
     font-size: 25px;
     font-family: "Comic Sans MS", cursive, sans-serif;
     margin: 4px 2px;
     cursor: pointer;
+    border-radius: 20px;
     background-color: rgb(71, 84, 82);
 }
