@@ -24,7 +24,7 @@ that has id="barbie" in its tag*/
 }
 
 #red_button {
-    border: none;
+    border-width: 6px;
     color: white;
     padding: 40px 30px;
     text-align: center;
@@ -38,6 +38,7 @@ that has id="barbie" in its tag*/
     cursor: pointer;
     border-radius: 20px;
     background-color: rgb(255, 57, 143);
+    border-color: rgb(255, 0, 111);
 }
 
 #blue {
@@ -50,7 +51,7 @@ that has id="barbie" in its tag*/
 }
 
 #blue_button {
-    border: none;
+    border-width: 6px;
     color: white;
     padding: 40px 30px;
     text-align: center;
@@ -64,6 +65,7 @@ that has id="barbie" in its tag*/
     cursor: pointer;
     border-radius: 20px;
     background-color: rgb(129, 88, 253);
+    border-color: rgb(99, 47, 255);
 }
 
 #green {
@@ -76,7 +78,7 @@ that has id="barbie" in its tag*/
 }
 
 #green_button {
-    border: none;
+    border-width: 6px;
     color: white;
     padding: 40px 30px;
     text-align: center;
@@ -90,6 +92,7 @@ that has id="barbie" in its tag*/
     cursor: pointer;
     border-radius: 20px;
     background-color: rgb(77, 255, 148);
+    border-color: rgb(51, 196, 109);
 }
 
 
@@ -103,7 +106,7 @@ that has id="barbie" in its tag*/
 }
 
 #yellow_button {
-    border: none;
+    border-width: 6px;
     color: white;
     padding: 40px 30px;
     text-align: center;
@@ -116,6 +119,7 @@ that has id="barbie" in its tag*/
     margin: 4px 2px;
     cursor: pointer;
     border-radius: 20px;
+    border-color: rgb(231, 211, 25);
     background-color: rgb(255, 235, 57);
 }
 
@@ -129,7 +133,7 @@ that has id="barbie" in its tag*/
 }
 
 #wild_button {
-    border: none;
+    border-width: 6px;
     color: white;
     padding: 40px 30px;
     text-align: center;

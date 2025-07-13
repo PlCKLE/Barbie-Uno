@@ -99,7 +99,7 @@ function deal(deck, player, cardsDealt) {
     }
 } 
 
-function printHand(hand) {
+function printHand(hand, cardOnPile, tempColor) {
     const cardButtons = new Array(hand.length);
     const playerHandDiv = document.getElementById('playerHand');    // html division
 
@@ -112,6 +112,9 @@ function printHand(hand) {
         cardButtons[i].textContent = hand[i].value;
         cardButtons[i].id = hand[i].color + '_button';
         cardButtons[i].dataset.index = i;   // Creates a property for the button called "index"
+        if (!isValidPlay(cardOnPile, hand[i], tempColor)) {
+            cardButtons[i].style.backgroundColor = 'rgb(79, 71, 75)'
+        }
         
         cardButtons[i].addEventListener('click', () => {
         if (tempFunction) { // true when tempFunction is set to a function and not null or undefined
@@ -243,7 +246,7 @@ async function game() {
         const playerTrackerText = document.getElementById('playersTurnText');
         playerTrackerText.textContent = 'Player ' + (tracker + 1) + ' choose your card:'
         console.log("-1 Draw cards")
-        printHand(players[tracker].hand);
+        printHand(players[tracker].hand, discardPile[0], tempColor);
         
         var valid = 0
 
