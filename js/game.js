@@ -113,7 +113,7 @@ function printHand(hand, cardOnPile, tempColor) {
         cardButtons[i].id = hand[i].color + '_button';
         cardButtons[i].dataset.index = i;   // Creates a property for the button called "index"
         if (!isValidPlay(cardOnPile, hand[i], tempColor)) {
-            cardButtons[i].style.backgroundColor = 'rgb(79, 71, 75)'
+            cardButtons[i].style.opacity = .2;
         }
         
         cardButtons[i].addEventListener('click', () => {
@@ -151,6 +151,7 @@ function drawCard(player, deck, discardPile, tempColor) {
     tempCard = deck.pop();
     
     if (isValidPlay(discardPile[0], tempCard, tempColor)) {
+        // To add later: Make player verify placement of card
         randomInsert(deck, discardPile[0]);
         discardPile[0] = tempCard;
         console.log("Player " + (player.id + 1).toString() + " draws and places a " + tempCard.color + " " + tempCard.value);
@@ -171,29 +172,74 @@ function stupidDrawCard(player, deck) {
 }
 
 async function changeColor() {
-    console.log("0 Red\n1 Green\n2 Blue\n3 Yellow")
+    console.log("96 Red\n97 Green\n98 Blue\n99 Yellow")
+    
+    function deleteButtons(array){
+        for (let i = 0; i<array.length; i++){
+            array[i].remove();
+        }
+    }
+    
+    const changeColorSettings = [["Red", "400px", "600px"], ["Green", "600px", "600px"], ["Blue", "400px", "800px"], ["Yellow", "600px", "800px"]];
+    const colorButtons = new Array(4);
+
+    for (let i = 96; i<100; i++) {
+
+    colorButtons[i-96] = document.createElement('button');
+    colorButtons[i-96].textContent = changeColorSettings[i-96][0];
+    colorButtons[i-96].id = (changeColorSettings[i-96][0]).toLowerCase()+'_button';
+    colorButtons[i-96].style.position = "fixed";
+    colorButtons[i-96].style.top = changeColorSettings[i-96][1];
+    colorButtons[i-96].style.left = changeColorSettings[i-96][2];
+    colorButtons[i-96].addEventListener('click', () => {
+    if (tempFunction) { // true when tempFunction is set to a function and not null or undefined
+        tempFunction(Number(i));
+        tempFunction = null;
+    }
+    })
+
+    document.body.appendChild(colorButtons[i-96]);
+
+    }// end of for
+
     const choice = await ask("Pick the index of the color you to switch to:");
-    if (choice < 0 || choice > 3) {
+    if (choice < 96 || choice > 99) {
         console.log("\nInvaild selection.");
         return changeColor();
     }
     else {
         switch (choice) {
-            case 0:
+            case 96:
                 console.log("Color changed to red.");
+                deleteButtons(colorButtons);
                 return "red";
-            case 1:
+            case 97:
                 console.log("Color changed to green.");
+                deleteButtons(colorButtons);
                 return "green";
-            case 2:
+            case 98:
                 console.log("Color changed to blue.");
+                deleteButtons(colorButtons);
                 return "blue";
             default:
                 console.log("Color changed to yellow.");
+                deleteButtons(colorButtons);
                 return "yellow";
         }
     }
 }
+
+drawCardButton = document.createElement('button');
+drawCardButton.textContent = "Draw";
+drawCardButton.id = 'draw_button';
+drawCardButton.addEventListener('click', () => {
+if (tempFunction) { // true when tempFunction is set to a function and not null or undefined
+    tempFunction(Number(-1));
+    tempFunction = null;
+}
+})
+document.body.appendChild(drawCardButton);
+
 
 async function game() {
 
@@ -262,6 +308,9 @@ async function game() {
                     
                     while (valid == 0) {    // Loop is done until a valid card is drawn and played
                         
+                        printHand(players[tracker].hand, discardPile[0], tempColor);    // Shows new hand and then waits .75 seconds before drawing a new card and reprinting hand
+                        await new Promise(resolve => setTimeout(resolve, 750));
+
                         valid = drawCard(players[tracker], deck, discardPile, tempColor);
 
                         // Behavior of special cards (in case player draws a reverse, skip, +2, etc)
@@ -388,7 +437,7 @@ async function game() {
 
                     pendingCards += 4; // Add four cards for the next player
 
-                    tempColor = changeColor();
+                    tempColor = await changeColor();
 
                 }
                 else {

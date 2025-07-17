@@ -147,4 +147,26 @@ that has id="barbie" in its tag*/
     cursor: pointer;
     border-radius: 20px;
     background-color: rgb(71, 84, 82);
+    border-color: rgb(22, 22, 22);
+}
+
+#draw_button {
+    border-width: 6px;
+    color: white;
+    position: fixed;
+    top: 40px;
+    left: 40px;
+    padding: 40px 30px;
+    text-align: center;
+    justify-content: center;
+    margin: auto;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 25px;
+    font-family: "Comic Sans MS", cursive, sans-serif;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: 5px;
+    background-color: rgb(100, 14, 83);
+    border-color: rgb(22, 22, 22);
 }
