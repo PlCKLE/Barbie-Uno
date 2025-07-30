@@ -99,7 +99,7 @@ function deal(deck, player, cardsDealt) {
     }
 } 
 
-function printHand(hand, cardOnPile, tempColor) {
+function printHand(hand, cardOnPile, tempColor, pendingCards) {
     const cardButtons = new Array(hand.length);
     const playerHandDiv = document.getElementById('playerHand');    // html division
 
@@ -114,6 +114,9 @@ function printHand(hand, cardOnPile, tempColor) {
         cardButtons[i].dataset.index = i;   // Creates a property for the button called "index"
         if (!isValidPlay(cardOnPile, hand[i], tempColor)) {
             cardButtons[i].style.opacity = .2;
+        }
+        else if ((pendingCards > 0) && (((cardOnPile.value == '+4') && (hand[i].value != '+4')) || ((cardOnPile.value == '+2') && (hand[i].value != '+2')))) {   // Dumb way to check if pendingCards was due to a +2 or +4
+            cardButtons[i].style.opacity = .2;                      // We NEED to check both pending cards and if the cardOnPile is a +2 or +4, we can't just do either one
         }
         
         cardButtons[i].addEventListener('click', () => {
@@ -240,6 +243,12 @@ if (tempFunction) { // true when tempFunction is set to a function and not null 
 })
 document.body.appendChild(drawCardButton);
 
+pendingCardsText = document.createElement('p1');
+pendingCardsText.textContent = "If you're seeing this. Damn...";
+pendingCardsText.id = 'card_pickup';
+document.body.appendChild(pendingCardsText);
+pendingCardsText.style.visibility = 'hidden';
+
 
 async function game() {
 
@@ -292,7 +301,7 @@ async function game() {
         const playerTrackerText = document.getElementById('playersTurnText');
         playerTrackerText.textContent = 'Player ' + (tracker + 1) + ' choose your card:'
         console.log("-1 Draw cards")
-        printHand(players[tracker].hand, discardPile[0], tempColor);
+        printHand(players[tracker].hand, discardPile[0], tempColor, pendingCards);
         
         var valid = 0
 
@@ -308,7 +317,7 @@ async function game() {
                     
                     while (valid == 0) {    // Loop is done until a valid card is drawn and played
                         
-                        printHand(players[tracker].hand, discardPile[0], tempColor);    // Shows new hand and then waits .75 seconds before drawing a new card and reprinting hand
+                        printHand(players[tracker].hand, discardPile[0], tempColor, pendingCards);    // Shows new hand and then waits .75 seconds before drawing a new card and reprinting hand
                         await new Promise(resolve => setTimeout(resolve, 750));
 
                         valid = drawCard(players[tracker], deck, discardPile, tempColor);
@@ -406,7 +415,9 @@ async function game() {
         else if (discardPile[0].color == "wild"){ // Only runs when pending card > 0 and it's a wild card (+4)
 
             console.log("Play a +4 to counter or draw " + pendingCards + " cards.");
-            
+            pendingCardsText.textContent = "Play a +4 or draw "+ pendingCards+" cards";
+            pendingCardsText.style.visibility = 'visible';
+
             while (valid == 0) {
                 const choice = await ask("Choose the index of the card to play:");
 
@@ -446,12 +457,15 @@ async function game() {
             
             } // While loop for countering a +4
 
-
+            pendingCardsText.style.visibility = 'hidden';
         }
         
         else {
             console.log("Play a +2 to counter or draw " + pendingCards + " cards.");
-            
+            pendingCardsText.textContent = "Play a +2 or draw "+ pendingCards+" cards";
+            pendingCardsText.style.visibility = 'visible';
+
+
             while (valid == 0) {
                 const choice = await ask("Choose the index of the card to play:");
 
@@ -488,6 +502,9 @@ async function game() {
                 }
             
             } // While loop for countering a +2
+        
+            pendingCardsText.style.visibility = 'hidden';
+
         }
 
         if (players[tracker].hand.length == 1) {

@@ -170,3 +170,15 @@ that has id="barbie" in its tag*/
     background-color: rgb(100, 14, 83);
     border-color: rgb(22, 22, 22);
 }
+
+#card_pickup {
+    font-family: "Comic Sans MS", cursive, sans-serif;
+    padding: 20px;
+    position: fixed;
+    top: 40px;
+    left: 1050px;
+    font-size: 35px;
+    text-align: center;
+    text-shadow: 0 0 2px #250202;
+    color:rgb(11, 5, 31);
+}
