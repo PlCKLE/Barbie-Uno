@@ -112,7 +112,10 @@ function printHand(hand, cardOnPile, tempColor, pendingCards) {
         cardButtons[i].textContent = hand[i].value;
         cardButtons[i].id = hand[i].color + '_button';
         cardButtons[i].dataset.index = i;   // Creates a property for the button called "index"
-        if (!isValidPlay(cardOnPile, hand[i], tempColor)) {
+        if (pendingCards == -1) {   // -1 will only be entered into the pendingCards parameter when currently doing the drawing animation
+            cardButtons[i].style.opacity = .2;
+        }
+        else if (!isValidPlay(cardOnPile, hand[i], tempColor)) {
             cardButtons[i].style.opacity = .2;
         }
         else if ((pendingCards > 0) && (((cardOnPile.value == '+4') && (hand[i].value != '+4')) || ((cardOnPile.value == '+2') && (hand[i].value != '+2')))) {   // Dumb way to check if pendingCards was due to a +2 or +4
@@ -427,10 +430,12 @@ async function game() {
 
                 else if (choice == -1){
                     
-                    while (pendingCards > 0) {    // Loop is done until a valid card is drawn and played
-                        pendingCards--;
+                    while (pendingCards > 0) {
                         stupidDrawCard(players[tracker], deck);
-                        valid = 1
+                        printHand(players[tracker].hand, discardPile[0], tempColor, -1);    // Shows new hand and then waits .75 seconds before drawing a new card and reprinting hand
+                        await new Promise(resolve => setTimeout(resolve, 750));
+                        pendingCards--;
+                        valid = 1;
                     }
 
                 } // End of drawing logic
@@ -475,9 +480,11 @@ async function game() {
 
                 else if (choice == -1){
                     
-                    while (pendingCards > 0) {    // Loop is done until a valid card is drawn and played
-                        pendingCards--;
+                    while (pendingCards > 0) {
                         stupidDrawCard(players[tracker], deck);
+                        printHand(players[tracker].hand, discardPile[0], tempColor, -1);    // Shows new hand and then waits .75 seconds before drawing a new card and reprinting hand
+                        await new Promise(resolve => setTimeout(resolve, 750));
+                        pendingCards--;
                         valid = 1;
                     }
 
