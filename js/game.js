@@ -2,27 +2,27 @@ const numberOfPlayers = parseInt(localStorage.getItem('numPlayers'));     // Get
 var gameState = 1;  // 1 for UNO screen, 2 for POINTS screen, 0 for GAME FINISHED screen
 let tempFunction = null; // set to null whenever a button isn't meant to be pressed, set to resolve when a button is meant to be pressed
 
-// Get user input
-// let questionText;
-
-// function ask(question) {
-    
-//     return new Promise((resolve) => {
-//         questionText.textContent = question + ' ';
-//         questionInput.value = '';
-//         questionInput.focus();
-
-//         questionInput.addEventListener('keydown', (event) =>{
-//             if (event.key == 'Enter') {resolve(questionInput.value);}
-//         }
-        
-//         )}
-//     )};
-
 function ask(question) {
+    
     return new Promise((resolve) => {
-        tempFunction = resolve;
+    
+        function submit(entry) {
+            submitButton = document.createElement('button');
+            submitButton.textContent = 'Submit';
+            submitButton.style.position = 'fixed';
+            submitButton.style.left = '750px';
+            submitButton.style.top = '500px';
+            document.body.appendChild(submitButton);
+            submitButton.addEventListener('click', () => 
+                {resolve(entry);
+                submitButton.remove();
+                })
+        }
+    
+        tempFunction = submit;
     })
+
+
 }
 
 class Card {
@@ -124,6 +124,7 @@ function printHand(hand, cardOnPile, tempColor, pendingCards) {
         
         cardButtons[i].addEventListener('click', () => {
         if (tempFunction) { // true when tempFunction is set to a function and not null or undefined
+            cardButtons[i].style.borderColor = 'magenta';
             tempFunction(Number(cardButtons[i].dataset.index));
             tempFunction = null;
         }
@@ -409,7 +410,8 @@ async function game() {
 
                 }
                 else {
-                    console.log("Card cannot be played.\n")
+                    console.log("Card cannot be played.\n");
+                    printHand(players[tracker].hand, discardPile[0], tempColor, pendingCards);
                 }
             
                 }
@@ -457,7 +459,8 @@ async function game() {
 
                 }
                 else {
-                    console.log("Card cannot be played.\n")
+                    console.log("Card cannot be played.\n");
+                    printHand(players[tracker].hand, discardPile[0], tempColor, pendingCards);
                 }
             
             } // While loop for countering a +4
@@ -505,7 +508,8 @@ async function game() {
 
                 }
                 else {
-                    console.log("Card cannot be played.\n")
+                    console.log("Card cannot be played.\n");
+                    printHand(players[tracker].hand, discardPile[0], tempColor, pendingCards);
                 }
             
             } // While loop for countering a +2
