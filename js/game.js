@@ -1,6 +1,8 @@
 const numberOfPlayers = parseInt(localStorage.getItem('numPlayers'));     // Gets variable stored in local storage from menu.js
 var gameState = 1;  // 1 for UNO screen, 2 for POINTS screen, 0 for GAME FINISHED screen
 let tempFunction = null; // set to null whenever a button isn't meant to be pressed, set to resolve when a button is meant to be pressed
+let cancelFunction = null; // Function for cancelling tempFunction
+
 
 function ask(question) {
     
@@ -16,6 +18,7 @@ function ask(question) {
             submitButton.addEventListener('click', () => 
                 {resolve(entry);
                 submitButton.remove();
+                cancelFunction = null;
                 })
         }
     
@@ -23,6 +26,13 @@ function ask(question) {
     })
 
 
+}
+
+function cancel(hand, cardOnPile, tempColor, pendingCards) {
+    printHand(hand, cardOnPile, tempColor, pendingCards);
+    if(submitButton){
+        submitButton.remove();
+    }
 }
 
 class Card {
@@ -123,10 +133,18 @@ function printHand(hand, cardOnPile, tempColor, pendingCards) {
         }
         
         cardButtons[i].addEventListener('click', () => {
-        if (tempFunction) { // true when tempFunction is set to a function and not null or undefined
-            cardButtons[i].style.borderColor = 'magenta';
-            tempFunction(Number(cardButtons[i].dataset.index));
-            tempFunction = null;
+        if (cancelFunction){
+            cancelFunction(hand, cardOnPile, tempColor, pendingCards);
+            console.log("Cancelled");
+            cancelFunction = null;
+        }
+        else if (tempFunction) { // true when tempFunction is set to a function and not null or undefined
+            if (isValidPlay(cardOnPile, hand[i], tempColor)){
+                cardButtons[i].style.borderColor = 'magenta';
+                tempFunction(Number(cardButtons[i].dataset.index));
+                console.log("Cancel set");
+                cancelFunction = cancel;
+            }
         }
         
         });
