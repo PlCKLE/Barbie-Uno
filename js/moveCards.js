@@ -1,23 +1,25 @@
 let mouseX = 0;
 let mouseY = 0;
-let boundaryX = 0;
-let boundaryY = 0;
 
 //This can probably be made into a class
+//Actually, it very likely needs to be integrated within a card class. EventRemover for dragFunction should be callable for each individual card.
+
 function updateCards() {
     let cards = document.getElementsByClassName("Card");
 
     for(const card of cards) {
-        console.log(card);
-        card.ondragstart = doNothing();
-        let dragFunction = function()  {
+        card.ondragstart = doNothing;
+        let dragFunction = function(event)  {
+            mouseX = event.clientX;
+            mouseY = event.clientY;
             dragElement(card);
-            card.addEventListener("mouseup", EventRemover);
+            
         }
-        let EventRemover = function() {
-            card.removeEventListener("mousedown", dragFunction);
-            card.removeEventListener("mouseup", EventRemover);
-        }
+        // let EventRemover = function() {
+        //      console.log("REMOVED");
+        //      card.removeEventListener("mousedown", dragFunction);
+        //      card.removeEventListener("mouseup", EventRemover);
+        // }
         card.addEventListener("mousedown",dragFunction);
     }
 }
@@ -29,21 +31,28 @@ updateCards();
 function doNothing() {
     return false;
 }
+
+
 function dragElement(element) {
-    return function (event) {
         const moveThisElement = moveElement(element);
         element.addEventListener("mousemove", moveThisElement);
         let EventRemover = function() {
-            element.removeEventListener("mousemove", moveThisElement)
+            element.removeEventListener("mousemove", moveThisElement);
             element.removeEventListener("mouseup", EventRemover);
         };
-
+        element.addEventListener("mouseup", EventRemover);
+        
         
     };
-}
+    
 function moveElement(element) {
     return function (event) {
-        element.style.left = event.clientX + element.offsetLeft + "px";
-        element.style.top = event.clientY + element.offsetTop + "px";
+        let mouseDisplacementX = event.clientX - mouseX;
+        let mouseDisplacementY = event.clientY - mouseY;
+        
+        mouseX = event.clientX;
+        mouseY = event.clientY;
+        element.style.left = mouseDisplacementX + element.offsetLeft + "px";
+        element.style.top = mouseDisplacementY + element.offsetTop + "px";
     };
 }
