@@ -183,6 +183,16 @@ that has id="barbie" in its tag*/
     color:rgb(11, 5, 31);
 }
 
+.image {
+width: 165px;
+height: 258px;   
+justify-content: center;
+display: inline-block;
+transform: scale(.6);
+margin-left: -80px;
+margin-top: -200px; 
+}
+
 .image-button {
 width: 165px;
 height: 258px;
@@ -192,6 +202,7 @@ transform: scale(.72);
 justify-content: center;
 display: inline-block;
 margin-left: -30px;
+margin-top: -200px;
 }
 
 .image-button:hover {
