@@ -3,7 +3,7 @@ var gameState = 1;  // 1 for UNO screen, 2 for POINTS screen, 0 for GAME FINISHE
 let tempFunction = null; // set to null whenever a button isn't meant to be pressed, set to resolve when a button is meant to be pressed
 let cancelFunction = null; // Function for cancelling tempFunction
 // const GAMESTATE = Object.freeze({WAITING : 0, PLAY : 1, DRAW : 2}) //Planned changes to logic 
-var cardPack = new UnoCardPack(); // Changes based on the version being played.
+var cardPack; // Changes based on the version being played.
 
 function ask(question) {
     
@@ -37,7 +37,7 @@ function cancel(hand, cardOnPile, tempColor, pendingCards) {
 }
 class UnoCardPack {
     COLOR = Object.freeze({RED: 0, GREEN: 1, YELLOW : 2, BLUE : 3, WILD : 4});
-    COLORS = Object.values(COLOR);
+    COLORS = Object.values(this.COLOR);
     VALUE = Object.freeze({
 	    ZERO : 0, ONE : 1, TWO : 2,
 	    THREE : 3, FOUR : 4, FIVE : 5,
@@ -45,11 +45,12 @@ class UnoCardPack {
 	    NINE : 9, SKIP: 10, REVERSE: 11,
         PLUSTWO : 12
 	});
-    VALUES = Object.values(CardValue);
+    VALUES = Object.values(this.VALUE);
 
     SPECIAL = Object.freeze({
         PLUSFOUR : 13, CHANGECOLOR : 14
     });
+    SPECIALS = Object.values(this.SPECIAL);
     parseValue(value) {
         switch(value) {
             case this.VALUE.ZERO: return "0"; case this.VALUE.ONE: return "1"; case this.VALUE.TWO: return "2";
@@ -237,16 +238,16 @@ async function changeColor() {
     }
     
     const changeColorSettings = [[cardPack.parseColor(cardPack.COLOR.RED), "400px", "600px"],
-        [cardPack.parseColor(cardPack.COLOR.GREEN).toUpperCase, "600px", "600px"],
-        [cardPack.parseColor(cardPack.COLOR.BLUE).toUpperCase, "400px", "800px"],
-        [cardPack.parseColor(cardPack.COLOR.YELLOW).toUpperCase, "600px", "800px"]];
+        [cardPack.parseColor(cardPack.COLOR.GREEN), "600px", "600px"],
+        [cardPack.parseColor(cardPack.COLOR.BLUE), "400px", "800px"],
+        [cardPack.parseColor(cardPack.COLOR.YELLOW), "600px", "800px"]];
     const colorButtons = new Array(4);
 
     for (let i = 96; i<100; i++) {
 
     colorButtons[i-96] = document.createElement('button');
     colorButtons[i-96].textContent = changeColorSettings[i-96][0];
-    colorButtons[i-96].id = (changeColorSettings[i-96][0]).toLowerCase()+'_button';
+    colorButtons[i-96].id = (changeColorSettings[i-96][0])+'_button';
     colorButtons[i-96].style.position = "fixed";
     colorButtons[i-96].style.top = changeColorSettings[i-96][1];
     colorButtons[i-96].style.left = changeColorSettings[i-96][2];
@@ -269,21 +270,21 @@ async function changeColor() {
     else {
         switch (choice) {
             case 96:
-                console.log(`Color changed to ${parseColor(cardPack.COLOR.RED)}.` );
+                console.log(`Color changed to ${cardPack.parseColor(cardPack.COLOR.RED)}.` );
                 deleteButtons(colorButtons);
-                return cardPack.COLOR.RED;
+                return cardPack.parseColor(cardPack.COLOR.RED);
             case 97:
-                console.log(`Color changed to ${parseColor(cardPack.COLOR.GREEN)}.`);
+                console.log(`Color changed to ${cardPack.parseColor(cardPack.COLOR.GREEN)}.`);
                 deleteButtons(colorButtons);
-                return cardPack.COLOR.GREEN;
+                return cardPack.parseColor(cardPack.COLOR.GREEN);
             case 98:
-                console.log(`Color changed to ${parseColor(cardPack.COLOR.BLUE)}.`);
+                console.log(`Color changed to ${cardPack.parseColor(cardPack.COLOR.BLUE)}.`);
                 deleteButtons(colorButtons);
-                return cardPack.COLOR.BLUE;
+                return cardPack.parseColor(cardPack.COLOR.BLUE);
             default:
-                console.log(`Color changed to ${parseColor(cardPack.COLOR.YELLOW)}.`);
+                console.log(`Color changed to ${cardPack.parseColor(cardPack.COLOR.YELLOW)}.`);
                 deleteButtons(colorButtons);
-                return cardPack.COLOR.YELLOW;
+                return cardPack.parseColor(cardPack.COLOR.YELLOW);
         }
     }
 }
@@ -307,7 +308,7 @@ pendingCardsText.style.visibility = 'hidden';
 
 
 async function game() {
-
+    cardPack = new UnoCardPack();
     let deck = createDeck();
     
     // Creating players
