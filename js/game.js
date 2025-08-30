@@ -2,7 +2,8 @@ const numberOfPlayers = parseInt(localStorage.getItem('numPlayers'));     // Get
 var gameState = 1;  // 1 for UNO screen, 2 for POINTS screen, 0 for GAME FINISHED screen
 let tempFunction = null; // set to null whenever a button isn't meant to be pressed, set to resolve when a button is meant to be pressed
 let cancelFunction = null; // Function for cancelling tempFunction
-
+// const GAMESTATE = Object.freeze({WAITING : 0, PLAY : 1, DRAW : 2}) //Planned changes to logic 
+var cardPack = new UnoCardPack(); // Changes based on the version being played.
 
 function ask(question) {
     
@@ -34,20 +35,50 @@ function cancel(hand, cardOnPile, tempColor, pendingCards) {
         submitButton.remove();
     }
 }
+class UnoCardPack {
+    COLOR = Object.freeze({RED: 0, GREEN: 1, YELLOW : 2, BLUE : 3, WILD : 4});
+    COLORS = Object.values(COLOR);
+    VALUE = Object.freeze({
+	    ZERO : 0, ONE : 1, TWO : 2,
+	    THREE : 3, FOUR : 4, FIVE : 5,
+	    SIX : 6, SEVEN : 7, EIGHT : 8,
+	    NINE : 9, SKIP: 10, REVERSE: 11,
+        PLUSTWO : 12
+	});
+    VALUES = Object.values(CardValue);
 
+    SPECIAL = Object.freeze({
+        PLUSFOUR : 13, CHANGECOLOR : 14
+    });
+    parseValue(value) {
+        switch(value) {
+            case this.VALUE.ZERO: return "0"; case this.VALUE.ONE: return "1"; case this.VALUE.TWO: return "2";
+            case this.VALUE.THREE: return "3"; case this.VALUE.FOUR: return "4"; case this.VALUE.FIVE: return "5";
+            case this.VALUE.SIX: return "6"; case this.VALUE.SEVEN: return "7"; case this.VALUE.EIGHT: return "8";
+            case this.VALUE.NINE: return "9"; case this.VALUE.SKIP: return "skip"; case this.VALUE.REVERSE: return "reverse";
+            case this.VALUE.PLUSTWO: return "+2"; case this.SPECIAL.PLUSFOUR: return "+4"; case this.SPECIAL.CHANGECOLOR: return "changecolor";
+            default :
+                return "Not A Value"; //Not a Value
+        }
+    }
+    parseColor(color) {
+        switch(color) {
+            case this.COLOR.RED: return "red"; case this.COLOR.GREEN: return "green";
+            case this.COLOR.YELLOW: return "yellow"; case this.COLOR.BLUE: return "blue";
+            case this.COLOR.WILD: return "wild";
+            default :
+                return "Not a color";
+        }
+    }
+}
 class Card {
-
-    static COLORS = ["red", "green", "blue", "yellow", "wild"];
-    static VALUES = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "skip", "reverse", "+2"];
-    static SPECIAL = ["changecolor", "+4"];
-
     constructor(color, value) {
         this.color = color;         // red, green, blue, yellow, wild
         this.value = value;         // number like "1", "2", or the action "skip", "+4", "+2", "reverse", "changecolor"
     }
 
     toString() {
-        return this.color + " " + this.value;
+        return cardPack.parseColor(this.color) + " " + cardPack.parseColor(this.value);
     }
 
 // We can access card information by doing card.color and card.value
@@ -62,7 +93,7 @@ class Player {
     }
 
     play(index) {
-        this.hand.splice(index, 1);
+        return this.hand.splice(index, 1)[0];
     }
 
 }
@@ -70,21 +101,21 @@ class Player {
 function createDeck() {
     // Creates array of 108 randomly shuffled cards.
     const deck = [];
-    for (let i = 0; i < Card.COLORS.length - 1; i++) {
+    for (let i = 0; i < cardPack.COLORS.length - 1; i++) {
 
-        deck.push(new Card(Card.COLORS[i], "0"));      // Each color only has one zero card
+        deck.push(new Card(cardPack.COLORS[i], cardPack.VALUE.ZERO));      // Each color only has one zero card
 
-        for (let j = 1; j < Card.VALUES.length; j++) {
-            deck.push(new Card(Card.COLORS[i], Card.VALUES[j]));
-            deck.push(new Card(Card.COLORS[i], Card.VALUES[j]));
+        for (let j = 1; j < cardPack.VALUES.length; j++) {
+            deck.push(new Card(cardPack.COLORS[i], cardPack.VALUES[j]));
+            deck.push(new Card(cardPack.COLORS[i], cardPack.VALUES[j]));
         }
 
     }
 
-    for (let i = 0; i < Card.SPECIAL.length; i++) {
+    for (let i = 0; i < cardPack.SPECIALS.length; i++) {
         
         for (let j = 0; j < 4; j++) {
-            deck.push(new Card("wild", Card.SPECIAL[i]));
+            deck.push(new Card(cardPack.COLOR.WILD, cardPack.SPECIALS[i]));
         }
     
     }
@@ -119,8 +150,8 @@ function printHand(hand, cardOnPile, tempColor, pendingCards) {
 
     for (let i = 0; i < hand.length; i++) {
         cardButtons[i] = document.createElement('button');
-        cardButtons[i].textContent = hand[i].value;
-        cardButtons[i].id = hand[i].color + '_button';
+        cardButtons[i].textContent = cardPack.parseValue(hand[i].value);
+        cardButtons[i].id = cardPack.parseColor(hand[i].color) + '_button';
         cardButtons[i].dataset.index = i;   // Creates a property for the button called "index"
         if (pendingCards == -1) {   // -1 will only be entered into the pendingCards parameter when currently doing the drawing animation
             cardButtons[i].style.opacity = .2;
@@ -128,7 +159,7 @@ function printHand(hand, cardOnPile, tempColor, pendingCards) {
         else if (!isValidPlay(cardOnPile, hand[i], tempColor)) {
             cardButtons[i].style.opacity = .2;
         }
-        else if ((pendingCards > 0) && (((cardOnPile.value == '+4') && (hand[i].value != '+4')) || ((cardOnPile.value == '+2') && (hand[i].value != '+2')))) {   // Dumb way to check if pendingCards was due to a +2 or +4
+        else if ((pendingCards > 0) && (((cardOnPile.value == cardPack.SPECIAL.PLUSFOUR) && (hand[i].value != cardPack.SPECIAL.PLUSFOUR)) || ((cardOnPile.value == cardPack.VALUE.PLUSTWO) && (hand[i].value != cardPack.VALUE.PLUSTWO)))) {   // Dumb way to check if pendingCards was due to a +2 or +4
             cardButtons[i].style.opacity = .2;                      // We NEED to check both pending cards and if the cardOnPile is a +2 or +4, we can't just do either one
         }
         
@@ -163,11 +194,11 @@ function randomInsert(deck, card) {
 
 function isValidPlay(cardOnPile, cardPlayed, tempColor) {
     // Checks if it is valid to play cardPlayed on cardOnPile. tempColor is used for special cards
-    if (cardOnPile.color != "wild") {
-        return (cardPlayed.color == cardOnPile.color || cardPlayed.color == "wild" || cardPlayed.value == cardOnPile.value)
+    if (cardOnPile.color != cardPack.COLOR.WILD) {
+        return (cardPlayed.color == cardOnPile.color || cardPlayed.color == cardPack.COLOR.WILD || cardPlayed.value == cardOnPile.value)
     }
     else {
-        return (cardPlayed.color == tempColor || cardPlayed.color == "wild")
+        return (cardPlayed.color == tempColor || cardPlayed.color == cardPack.COLOR.WILD)
     }
 }
 
@@ -193,7 +224,7 @@ function stupidDrawCard(player, deck) {
     // Makes a player draw one card. Doesn't check if the card is a valid play (used for stuff like +2s and +4s)
     let tempCard = deck.pop();
     player.hand.push(tempCard);
-    // console.log("Card drawn: " + tempCard);
+    // console.log("cardPack drawn: " + tempCard);
 }
 
 async function changeColor() {
@@ -205,7 +236,10 @@ async function changeColor() {
         }
     }
     
-    const changeColorSettings = [["Red", "400px", "600px"], ["Green", "600px", "600px"], ["Blue", "400px", "800px"], ["Yellow", "600px", "800px"]];
+    const changeColorSettings = [[cardPack.parseColor(cardPack.COLOR.RED), "400px", "600px"],
+        [cardPack.parseColor(cardPack.COLOR.GREEN).toUpperCase, "600px", "600px"],
+        [cardPack.parseColor(cardPack.COLOR.BLUE).toUpperCase, "400px", "800px"],
+        [cardPack.parseColor(cardPack.COLOR.YELLOW).toUpperCase, "600px", "800px"]];
     const colorButtons = new Array(4);
 
     for (let i = 96; i<100; i++) {
@@ -235,21 +269,21 @@ async function changeColor() {
     else {
         switch (choice) {
             case 96:
-                console.log("Color changed to red.");
+                console.log(`Color changed to ${parseColor(cardPack.COLOR.RED)}.` );
                 deleteButtons(colorButtons);
-                return "red";
+                return cardPack.COLOR.RED;
             case 97:
-                console.log("Color changed to green.");
+                console.log(`Color changed to ${parseColor(cardPack.COLOR.GREEN)}.`);
                 deleteButtons(colorButtons);
-                return "green";
+                return cardPack.COLOR.GREEN;
             case 98:
-                console.log("Color changed to blue.");
+                console.log(`Color changed to ${parseColor(cardPack.COLOR.BLUE)}.`);
                 deleteButtons(colorButtons);
-                return "blue";
+                return cardPack.COLOR.BLUE;
             default:
-                console.log("Color changed to yellow.");
+                console.log(`Color changed to ${parseColor(cardPack.COLOR.YELLOW)}.`);
                 deleteButtons(colorButtons);
-                return "yellow";
+                return cardPack.COLOR.YELLOW;
         }
     }
 }
@@ -290,7 +324,7 @@ async function game() {
 
     let discardPile = [];
     discardPile.push(deck.pop());
-    while (discardPile[0].color == "wild" || discardPile[0].value == "+2" || discardPile[0].value == "skip" || discardPile[0].value == "reverse") {
+    while (discardPile[0].color == cardPack.SPECIAL.CHANGECOLOR || discardPile[0].value == cardPack.VALUE.PLUSTWO || discardPile[0].value == cardPack.VALUE.SKIP || discardPile[0].value == cardPack.VALUE.PLUSTWO) {
         randomInsert(deck, discardPile[0]);
         discardPile[0] = deck.pop();
     }
@@ -313,10 +347,10 @@ async function game() {
         console.log('\nCard on top of discard pile:')
         console.log(discardPile[0]);
 
-        topOfPile.id = discardPile[0].color;
-        topOfPile.textContent = discardPile[0].value;
+        topOfPile.id = cardPack.parseColor(discardPile[0].color);
+        topOfPile.textContent = cardPack.parseValue(discardPile[0].value);
 
-        if (discardPile[0].color == "wild") {
+        if (discardPile[0].color == cardPack.COLOR.WILD) {
             console.log("Current color of wild is " + tempColor + ".");
             topOfPile.id = tempColor;
         }
@@ -347,7 +381,7 @@ async function game() {
                         // Behavior of special cards (in case player draws a reverse, skip, +2, etc)
                         switch(discardPile[0].value) {
 
-                        case "reverse":
+                        case cardPack.VALUE.REVERSE:
                             direction = -1*direction;
                             if (tracker < 0) {
                                 tracker = Math.abs((tracker + numberOfPlayers) % numberOfPlayers);  // If it's negative, add numberOfPlayers to bring it back in bounds and make the modulo properly loop
@@ -356,7 +390,7 @@ async function game() {
 
                             break;
 
-                        case "skip":
+                        case cardPack.VALUE.SKIP:
                             tracker = tracker + direction;
                             if (tracker < 0) {
                                 tracker = Math.abs((tracker + numberOfPlayers) % numberOfPlayers);  // If it's negative, add numberOfPlayers to bring it back in bounds and make the modulo properly loop
@@ -365,11 +399,11 @@ async function game() {
 
                             break;
 
-                        case "+2":
+                        case cardPack.VALUE.PLUSTWO:
                             pendingCards += 2;
                             break;
 
-                        case "changecolor":
+                        case cardPack.SPECIAL.CHANGECOLOR:
                             tempColor = await changeColor();
                             break;
                             
@@ -393,7 +427,7 @@ async function game() {
 
                     // Behavior of special cards
                     switch(discardPile[0].value) {
-                        case "reverse":
+                        case cardPack.VALUE.REVERSE:
                             direction = -1*direction;
                             if (tracker < 0) {
                                 tracker = Math.abs((tracker + numberOfPlayers) % numberOfPlayers);  // If it's negative, add numberOfPlayers to bring it back in bounds and make the modulo properly loop
@@ -401,7 +435,7 @@ async function game() {
                             else {tracker = Math.abs(tracker % numberOfPlayers);}
                             break;
                         
-                        case "skip":
+                        case cardPack.VALUE.SKIP:
                             tracker = tracker + direction;
                             if (tracker < 0) {
                                 tracker = Math.abs((tracker + numberOfPlayers) % numberOfPlayers);  // If it's negative, add numberOfPlayers to bring it back in bounds and make the modulo properly loop
@@ -409,15 +443,15 @@ async function game() {
                             else {tracker = Math.abs(tracker % numberOfPlayers);}
                             break;
 
-                        case "+2":
+                        case cardPack.VALUE.PLUSTWO:
                             pendingCards += 2;
                             break;
 
-                        case "changecolor":
+                        case cardPack.SPECIAL.CHANGECOLOR:
                             tempColor = await changeColor();
                             break;
 
-                        case "+4":
+                        case cardPack.SPECIAL.PLUSFOUR:
                             tempColor = await changeColor();
                             pendingCards += 4;
                             break;
@@ -435,7 +469,7 @@ async function game() {
                 }
             } // If statement for if a +2 was played
         
-        else if (discardPile[0].color == "wild"){ // Only runs when pending card > 0 and it's a wild card (+4)
+        else if (discardPile[0].color == cardPack.COLOR.WILD){ // Only runs when pending card > 0 and it's a wild card (+4)
 
             console.log("Play a +4 to counter or draw " + pendingCards + " cards.");
             pendingCardsText.textContent = "Play a +4 or draw "+ pendingCards+" cards";
@@ -460,7 +494,7 @@ async function game() {
 
                 } // End of drawing logic
                         
-                else if (players[tracker].hand[choice].value == "+4"){
+                else if (players[tracker].hand[choice].value == cardPack.SPECIAL.PLUSFOUR){
                     
                     valid = 1;
 
@@ -511,7 +545,7 @@ async function game() {
 
                 } // End of drawing logic
                         
-                else if (players[tracker].hand[choice].value == "+2"){
+                else if (players[tracker].hand[choice].value == cardPack.VALUE.PLUSTWO){
                     
                     valid = 1;
 
