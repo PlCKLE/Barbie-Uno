@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react"
   let isDragging = true;
-export function Card({ value, color, cardIndex}) {
+export function Card({ value, color, cardIndex, left, top, imageLink}) {
   const cardRef = useRef(null);
   const [originalOffsetLeft, setOriginalOffsetLeft] = useState(null);
   const [originalOffsetTop,setOriginalOffsetTop] = useState(null);
@@ -12,24 +12,31 @@ export function Card({ value, color, cardIndex}) {
   useEffect(() => {
     injectDrag(cardRef.current);
   }, [originalOffsetTop])
+
+
    return (
-     <div ref={cardRef} className="Card">
-        <img width = "200px" height = "200px" src = "https://images.ctfassets.net/l7h59hfnlxjx/582Lx8AhvXHgRLXagk73lV/ef827f6b381202b112b61e218d8e3154/President_Obama_Headshot__Economic_Inclusion___Photo_by_Pari_Dukovic_courtesy_of_Penguin_Random_House_.jpg?q=75&w=1014&fm=webp" />
+     <div ref={cardRef} className="Card" style={{left: left, top: top, zIndex: cardIndex}}>
+        <img width = "200px" height = "200px" src = {imageLink} />
      </div>
    )
 
-   function doNothing() {
+
+
+
+
+   //Card Functions
+function doNothing() {
   return false;
 }
 
-function injectDrag(card) {
-  card.ondragstart = doNothing;
-  let dragFunction = function(event)  {
-    isDragging = true;
-    dragElementWithMemory(event, card);
+  function injectDrag(card) {
+    card.ondragstart = doNothing;
+    let dragFunction = function(event)  {
+      isDragging = true;
+      dragElementWithMemory(event, card);
+    }
+    card.addEventListener("mousedown",dragFunction);
   }
-  card.addEventListener("mousedown",dragFunction);
-}
   function dragElementWithMemory(event, element) {
     element.style.zIndex = 20;
     const mouseDifferenceX = parseInt(event.clientX) - parseInt(element.offsetLeft);
@@ -58,7 +65,7 @@ function injectDrag(card) {
     element.style.left = mouseDisplacementX + element.offsetLeft + "px";
     element.style.top = mouseDisplacementY + element.offsetTop + "px";
     };
-}
+  }
 
     //It would be really cool if someone made a formula to smooth out the moving.
     async function approachPositionRecursively(element) {
