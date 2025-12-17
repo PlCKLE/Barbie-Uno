@@ -16,7 +16,7 @@ export function Card({ value, color, cardIndex, left, top, imageLink}) {
 
    return (
      <div ref={cardRef} className="Card" style={{left: left, top: top, zIndex: cardIndex}}>
-        <img width = "200px" height = "200px" src = {imageLink} />
+        <img width = "150px" height = "250px" src = {imageLink} />
      </div>
    )
 
@@ -76,7 +76,6 @@ function doNothing() {
         let currentTop = parseInt(element.offsetTop);
         let originalLeftDifference = originalOffsetLeft - currentLeft;
         let originalTopDifference = originalOffsetTop - currentTop;
-        console.log(originalOffsetLeft)
 
         //can a case statement be used instead?
 
