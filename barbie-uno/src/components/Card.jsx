@@ -1,20 +1,19 @@
 import { useEffect, useRef, useState } from "react"
-export function Card({ value, color}) {
+export function Card({ value, color, cardIndex}) {
   const cardRef = useRef(null);
   useEffect(() => {
     console.log(cardRef.current)
     injectDrag(cardRef.current);
-
+    console.log(cardIndex);
 
   },[])
    return (
      <div ref={cardRef} className="Card">
-        <h1>I am a mock card! Woo!</h1>
+        <img width = "200px" height = "200px" src = "https://images.ctfassets.net/l7h59hfnlxjx/582Lx8AhvXHgRLXagk73lV/ef827f6b381202b112b61e218d8e3154/President_Obama_Headshot__Economic_Inclusion___Photo_by_Pari_Dukovic_courtesy_of_Penguin_Random_House_.jpg?q=75&w=1014&fm=webp" />
      </div>
    )
-}
 
-function doNothing() {
+   function doNothing() {
   return false;
 }
 
@@ -26,14 +25,16 @@ function injectDrag(card) {
   card.addEventListener("mousedown",dragFunction);
 }
   function dragElementWithMemory(event, element) {
-    const mouseDifferenceX = parseInt(element.style.right) - parseInt(event.clientX);
-    const mouseDifferenceY = parseInt(element.style.top) - parseInt(event.clientY);
+    element.style.zIndex = 20;
+    const mouseDifferenceX = parseInt(event.clientX) - parseInt(element.offsetLeft);
+    const mouseDifferenceY = parseInt(element.offsetTop) - parseInt(event.clientY);
 
       const moveThisElement = moveElement(element, mouseDifferenceX, mouseDifferenceY);
       element.addEventListener("mousemove", moveThisElement);
       let EventRemover = function() {
           element.removeEventListener("mousemove", moveThisElement);
           element.removeEventListener("mouseup", EventRemover);
+          element.style.zIndex = cardIndex;
           setTimeout(function() {
             // approachPositionRecursively(element, parseInt(element.style.left),parseInt(element.style.top));
           })
@@ -44,9 +45,9 @@ function injectDrag(card) {
   function moveElement(element, previousMouseDifferenceX, previousMouseDifferenceY) {
     return function (event) {
     console.log("Attempting move!")
-    const currentMouseDifferenceX = parseInt(element.style.right) - parseInt(event.clientX);
-    const currentMouseDifferenceY = parseInt(element.style.top) - parseInt(event.clientY);
-    const mouseDisplacementX = previousMouseDifferenceX - currentMouseDifferenceX;
+    const currentMouseDifferenceX = parseInt(event.clientX) - parseInt(element.offsetLeft);
+    const currentMouseDifferenceY = parseInt(element.offsetTop) - parseInt(event.clientY);
+    const mouseDisplacementX = currentMouseDifferenceX - previousMouseDifferenceX;
     const mouseDisplacementY = previousMouseDifferenceY - currentMouseDifferenceY;
     console.log("Mouse displacement on X: " + mouseDisplacementX)
     element.style.left = mouseDisplacementX + element.offsetLeft + "px";
@@ -56,8 +57,8 @@ function injectDrag(card) {
 
     function approachPositionRecursively(element, positionLeft, positionTop) {
         //In the future, it can look better if they change based on the ratio between the current left and top positions (hypotenuse)
-        let currentLeft = parseInt(element.style.left);
-        let currentTop = parseInt(element.style.top);
+        let currentLeft = parseInt(element.offsetLeft);
+        let currentTop = parseInt(element.offsetTop);
         let originalLeftDifference = positionLeft - currentLeft;
         let originalTopDifference = positionTop - currentTop;
         
@@ -89,3 +90,4 @@ function injectDrag(card) {
         return;
 
     }
+}
