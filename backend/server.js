@@ -4,6 +4,7 @@ import express from "express"
 import routes from "./API/routes.js"
 import { Server } from "socket.io"
 import { initializeWebSocketHandlers } from "./websocket/websocket-connection-handler.js";
+import http from "http"
 
 export const app = express();
 const port = 5000;
@@ -26,7 +27,9 @@ app.listen(port, () => {
 
 
 //Creates a websocket server
-const websocketServer = new Server(app);
+const websocketServer = http.createServer(app);
+//Creates the websocket
+const websocket = new Server(websocketServer);
 
 //Function inserts handlers from websocket folder into newly created websocket server.
-initializeWebSocketHandlers(websocketServer);
+initializeWebSocketHandlers(websocket);

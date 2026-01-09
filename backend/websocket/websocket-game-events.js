@@ -1,8 +1,7 @@
 import { games } from "./websocket-connection-handler.js"
-//import cardlogic
-//such as deal()
-//generateDeck()
-//
+import { generateDeck } from "./game-logic.js"
+import { shuffle } from "./game-logic.js" //TODO: to be used when no more cards exist in deck.
+import { deal } from "./game-logic.js"
 
 export function initializeGameEventHandlers(socket) {
 
@@ -12,7 +11,7 @@ export function initializeGameEventHandlers(socket) {
             socket.emit("startFailure", "You are not the owner of this game!");
         }
         else {
-            games[gameCode].gamePlayers.map((player => {
+            games[gameCode].players.map((player => {
                 player.socket.emit("gameStart");
             }))
             gameStartSetup(games[gameCode])
@@ -20,13 +19,13 @@ export function initializeGameEventHandlers(socket) {
     });
 
 
-    socket.on("playCards",(cards, identification, gameCode, callback) => {
+    socket.on("playCards",(cards, identification, gameCode, uno, callback) => {
         const game = games[gameCode]
         if (!isPlayersTurn(game,identification)) {
             callback({status: "failed", message:"It is not your turn!"})
         }
 
-        const playerHand = game.gamePlayers.find((player) => player.id == identification).hand;
+        const playerHand = game.players.find((player) => player.id == identification).hand;
         var validPlay = false;
         var validStacking = true;
         var cardExistsInHand = true;
@@ -46,56 +45,86 @@ export function initializeGameEventHandlers(socket) {
                 cardExistsInHand = false;
             }
         })
+        //If all checks pass, remove cards from hand and add it to discard pile.
         if(validPlay && validStacking && cardExistsInHand) {
-           game.gamePlayers[game.playingIndex].hand = playerHand.filter(card => !cards.includes(card)) 
+           game.players[game.playingIndex].hand = playerHand.filter(card => !cards.includes(card)) 
            cardsMinusFirstCard = cards.filter(card => card !== firstCard);
            game.discardPile = [firstCard, ...cardsMinusFirstCard, ...game.discardPile]
+
+           if(uno && player.hand.length <= 1) {
+                callback({uno: true})
+            }
+            else if (uno) {
+                callback({uno: false})
+            }
         }
 
+        //Move onto the next player
         nextPlayer(game);
+
+        //If the discarded cards were plus two or four, deliver that to the next player.
+        updatePlayers(game);
+        if(firstCard.rank === "+2") {
+            game.drawCounter = 2 * cards.length
+            deliverDrawCounter("+2");
+        }
+        else if(firstCard.rank === "+4"){
+            game.drawCounter = 4 * cards.length
+            deliverDrawCounter("+4");
+        }
+        
     });
-    socket.on("uno",(identification, gameCode, callback) => {
+
+
+    socket.on("draw", (identification, gameCode, forced, callback) => {
+        //WARNING: No validation if the hand is actually forced or not. Leaves an avenue for cheating.
+        const game = games[gameCode]
+        if (!isPlayersTurn(game,identification)) {
+            callback({status: "failed", message:"It is not your turn!"})
+        }
+        const player = game.players.find((player) => player.id == identification)
+
+        const card = deal(game.deck,1);
+        player.hand.push(card)
+
+        if(game.drawBehavior === "once" || !forced) {
+            nextPlayer(game);
+            updatePlayers(game);
+            return;
+        }
+        else if(forced) {
+            //code that draws till card is found.
+        }
+        nextPlayer(game);
+        updatePlayers(game);
+
+    })
+    socket.on("accuseUno", (identification, accused, gameCode, callback) => {
+        //actions that do not require a turn do not currently check for identification. This does mean anyone can accuse of uno, even if they aren't in the game. TOFIX later.
+        const game = games[gameCode]
+
+        const accused = game.players.find((player) => player.id === accused);
+        if(accused.uno === false && accused.hand.length === 1) {
+            accused.hand.push(deal(game.deck,2));
+            accused.socket.emit("forceUpdate");
+        }
+        else {
+            callback({sucess: false})
+        }
+
+
+
+    })
+    socket.on("accept+4", (identification,gameCode, callback) => {
         const game = games[gameCode]
         if (!isPlayersTurn(game,identification)) {
             callback({status: "failed", message:"It is not your turn!"})
         }
 
 
-        if(valid) {
-            games[gameCode].gamePlayers.find((player) => player.id == identification).uno = true;
-        }
-        else 
-            callback
-    })
-
-    socket.on("draw", (identification, gameCode, callback) => {
-        const game = games[gameCode]
-        if (!isPlayersTurn(game,identification)) {
-            callback({status: "failed", message:"It is not your turn!"})
-        }
-
-
 
     })
-    socket.on("accuseUno", (identification, accussee, gameCode, callback) => {
-        const game = games[gameCode]
-        if (!isPlayersTurn(game,identification)) {
-            callback({status: "failed", message:"It is not your turn!"})
-        }
-
-
-
-    })
-    socket.on("acceptDrawFour", (identification,gameCode, callback) => {
-        const game = games[gameCode]
-        if (!isPlayersTurn(game,identification)) {
-            callback({status: "failed", message:"It is not your turn!"})
-        }
-
-
-
-    })
-    socket.on("counterDrawFour", (cards,identification,gameCode, callback) => {
+    socket.on("counter+4", (cards,identification,gameCode, callback) => {
         const game = games[gameCode]
         if (!isPlayersTurn(game,identification)) {
             callback({status: "failed", message:"It is not your turn!"})
@@ -104,7 +133,7 @@ export function initializeGameEventHandlers(socket) {
         
 
     })
-    socket.on("acceptDrawTwo", (identification,gameCode, callback) => {
+    socket.on("accept+2", (identification,gameCode, callback) => {
         const game = games[gameCode]
         if (!isPlayersTurn(game,identification)) {
             callback({status: "failed", message:"It is not your turn!"})
@@ -113,7 +142,7 @@ export function initializeGameEventHandlers(socket) {
 
 
     });
-    socket.on("counterDrawTwo", (cards,identification,gameCode, callback) => {
+    socket.on("counter+2", (cards,identification,gameCode, callback) => {
         const game = games[gameCode]
         if (!isPlayersTurn(game,identification)) {
             callback({status: "failed", message:"It is not your turn!"})
@@ -133,7 +162,15 @@ export function initializeGameEventHandlers(socket) {
         //perhaps dont include this as a different event and instead just put it in the play hand event.
     })
     socket.on("endGame", (identification,gameCode) => {
-        
+
+    })
+
+    socket.on("update", (identification, gameCode, callback) => {
+        const game = games[gameCode];
+        const self = game.players.find(identification)
+        const others = game.players.filter(player => player.id !== identification)
+        others.map((other) => other.hand = other.hand.length)
+        callback({self: self, others: others, isFinished: game.isFinished})
     })
 }
 
@@ -143,27 +180,27 @@ export function initializeGameEventHandlers(socket) {
 function gameStartSetup(game) {
     game.deck = generateDeck();
     game.playingIndex = 0;
-    var discardStartingCard = deck.pop;
-    game.gamePlayers.map((player => {
-                player.hand = dealCards(game.deck,5);
+    game.players.map((player => {
+                player.hand = deal(game.deck,5);
             }));
     game.direction = "clockwise";
+    game.drawBehavior = "once"
 
-
+    var discardStartingCard = deck.pop;
     game.discardPile.push(discardStartingCard);
+    updatePlayers(game);
     if(discardStartingCard.special) {
-        game.gamePlayers[0].socket.emit("doAction","chooseColor");
-        if(discardStartingCard.rank == "+4")
-            game.gamePlayers[0].socket.emit("drawFour")
-    }
-    else if (discardStartingCard.rank == "drawTwo") {
-        game.gamePlayers[0].socket.emit("drawTwo");
+        game.players[0].socket.emit("doAction","chooseColor");
+        if(discardStartingCard.rank === "+4")
+            deliverDrawCounter("+2");
+        else if (discardStartingCard.rank === "+2") 
+            deliverDrawCounter("+4");
     }
 }
 
 
 function isPlayersTurn(game, identification) {
-    if (game.gamePlayers.find((player) => player.id == identification) != game.gamePlayers[game.playingIndex]) {
+    if (game.players.find((player) => player.id == identification) != game.players[game.playingIndex]) {
         return false;
     }
     return true;
@@ -171,13 +208,28 @@ function isPlayersTurn(game, identification) {
 
 function nextPlayer(game) {
     if(game.direction === "clockwise")
-        if(game.playingIndex + 1 > game.gamePlayers.length - 1)
+        if(game.playingIndex + 1 > game.players.length - 1)
             game.playingIndex = 0;
         else
             game.playingIndex ++;
     else
         if(game.playingIndex - 1 < 0)
-            game.playingIndex = game.gamePlayers.length - 1;
+            game.playingIndex = game.players.length - 1;
         else
             game.playingIndex --;
+}
+
+function deliverDrawCounter(rank,gameCode) {
+    const game = games[gameCode];
+    if(rank === "+2")
+        game.player[game.playingIndex].socket.emit("drawTwo")
+    else
+        game.player[game.playingIndex].socket.emit("drawFour")
+
+}
+
+function updatePlayers(game) {
+    game.players.map((player) => {
+        player.socket.emit("forceUpdate");
+    })
 }

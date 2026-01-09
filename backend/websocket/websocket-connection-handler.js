@@ -9,10 +9,10 @@ export function initializeWebSocketHandlers(websocketServer) {
             initializeGameEventHandlers(socket);
             if(callback.create) {
                 const game = {
-                    gameCode: games.size + 1,
+                    gameCode: games.length,
                     gameOwner: callback.identification,
                     gameStarted: false,
-                    gamePlayers: [{id: callback.identification, socket: socket, hand: null}],
+                    players: [{id: callback.identification, socket: socket}],
                     gamePassword: callback.gamePassword,
                     spectators: [],
                 };
@@ -39,6 +39,6 @@ function attemptGameJoin(socket, callback) {
         games[callback.gamecode].spectators.push({id: callback.identification, socket: socket});
     }
     else {
-        games[callback.gamecode].gamePlayers.push({id: callback.identification, socket: socket, hand: null});
+        games[callback.gamecode].gamePlayers.push({id: callback.identification, socket: socket, hand: null, uno: false});
     }
 }
