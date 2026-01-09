@@ -103,10 +103,10 @@ export function initializeGameEventHandlers(socket) {
         //actions that do not require a turn do not currently check for identification. This does mean anyone can accuse of uno, even if they aren't in the game. TOFIX later.
         const game = games[gameCode]
 
-        const accused = game.players.find((player) => player.id === accused);
-        if(accused.uno === false && accused.hand.length === 1) {
-            accused.hand.push(deal(game.deck,2));
-            accused.socket.emit("forceUpdate");
+        const accusedPlayer = game.players.find((player) => player.id === accused);
+        if(accusedPlayer.uno === false && accusedPlayer.hand.length === 1) {
+            accusedPlayer.hand.push(deal(game.deck,2));
+            accusedPlayer.socket.emit("forceUpdate");
         }
         else {
             callback({sucess: false})
