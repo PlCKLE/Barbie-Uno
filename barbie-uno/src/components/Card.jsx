@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react"
   let isDragging = true;
-export function Card({ rank, color, cardIndex, left, top, imageLink}) {
+export function Card({ card, cardIndex, left, top, imageLink}) {
   const cardRef = useRef(null);
   const [originalOffsetLeft, setOriginalOffsetLeft] = useState(null);
   const [originalOffsetTop,setOriginalOffsetTop] = useState(null);
@@ -24,10 +24,18 @@ export function Card({ rank, color, cardIndex, left, top, imageLink}) {
 
 
 
+
+
+
+
+
    //Card Functions
-function doNothing() {
-  return false;
-}
+
+
+   //Card Drag functions
+  function doNothing() {
+    return false;
+  }
 
   function injectDrag(card) {
     card.ondragstart = doNothing;
@@ -49,9 +57,9 @@ function doNothing() {
           document.onmouseup = null;
           element.style.zIndex = cardIndex;
           isDragging = false;
-          setTimeout(function() {
-            approachPositionRecursively(element);
-          })
+          // setTimeout(function() {
+          //   approachPositionRecursively(element);
+          // })
 
       };
       document.onmouseup = EventRemover;
@@ -66,7 +74,6 @@ function doNothing() {
     element.style.top = mouseDisplacementY + element.offsetTop + "px";
     };
   }
-
     //It would be really cool if someone made a formula to smooth out the moving.
     async function approachPositionRecursively(element) {
         //In the future, it can look better if they change based on the ratio between the current left and top positions (hypotenuse)

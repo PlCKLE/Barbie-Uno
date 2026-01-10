@@ -50,7 +50,8 @@ export function initializeGameEventHandlers(socket) {
            game.players[game.playingIndex].hand = playerHand.filter(card => !cards.includes(card)) 
            cardsMinusFirstCard = cards.filter(card => card !== firstCard);
            game.discardPile = [firstCard, ...cardsMinusFirstCard, ...game.discardPile]
-
+        
+            //This uno implementation can be done better. Maybe as a different event.
            if(uno && player.hand.length <= 1) {
                 callback({uno: true})
             }
@@ -194,7 +195,7 @@ export function initializeGameEventHandlers(socket) {
 
         clonedOthers.map((other) => {
             other.hand = other.hand.length;
-            other.identification = null;
+            //other.identification = null; // GUACAMOLE huge levels of risk, as identification is used to identify players. However, for the sake of having a name it will be given. DO NOT SHIP WITHOUT THIS FIXED
             other.socket = null;
         });
         clonedSelf.socket = null;

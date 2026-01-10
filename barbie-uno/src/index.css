@@ -1,3 +1,7 @@
 .Card {
     position: absolute;
 }
+.playerHand {
+    display: flex;
+    gap: 40px;
+}
