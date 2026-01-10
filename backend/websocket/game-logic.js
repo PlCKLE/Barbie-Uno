@@ -54,7 +54,7 @@ export function shuffle(array) {
 export function deal(deck, cardsDealt) {
     const cards = [];
     for (let dealtIterator = 0; dealtIterator < cardsDealt; dealtIterator ++) {
-        cards.hand.push(deck.pop());
+        cards.push(deck.pop());
     }
     return cards;
 }

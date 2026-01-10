@@ -19,7 +19,7 @@ export function initializeGameEventHandlers(socket) {
     });
 
 
-    socket.on("playCards",(cards, identification, gameCode, uno, callback) => {
+    socket.on("playCards",(identification, gameCode, cards, uno, callback) => {
         const game = games[gameCode]
         if (!isPlayersTurn(game,identification)) {
             callback({status: "failed", message:"It is not your turn!"})
@@ -99,7 +99,7 @@ export function initializeGameEventHandlers(socket) {
         updatePlayers(game);
 
     })
-    socket.on("accuseUno", (identification, accused, gameCode, callback) => {
+    socket.on("accuseUno", (identification, gameCode, accused, callback) => {
         //actions that do not require a turn do not currently check for identification. This does mean anyone can accuse of uno, even if they aren't in the game. TOFIX later.
         const game = games[gameCode]
 
@@ -115,16 +115,22 @@ export function initializeGameEventHandlers(socket) {
 
 
     })
-    socket.on("accept+4", (identification,gameCode, callback) => {
+    socket.on("accept+4", (identification, gameCode, callback) => {
         const game = games[gameCode]
         if (!isPlayersTurn(game,identification)) {
             callback({status: "failed", message:"It is not your turn!"})
         }
+        const player = game.players.find(player => player.id === identification)
+        const cards = deal(game.deck,game.drawCounter);
+        player.hand.push(cards);
+        game.drawCounter = 0;
+        nextPlayer();
+        updatePlayers();
 
 
 
     })
-    socket.on("counter+4", (cards,identification,gameCode, callback) => {
+    socket.on("counter+4", (identification, gameCode, cards, callback) => {
         const game = games[gameCode]
         if (!isPlayersTurn(game,identification)) {
             callback({status: "failed", message:"It is not your turn!"})
@@ -138,11 +144,18 @@ export function initializeGameEventHandlers(socket) {
         if (!isPlayersTurn(game,identification)) {
             callback({status: "failed", message:"It is not your turn!"})
         }
+        const player = game.players.find(player => player.id === identification)
+        const cards = deal(game.deck,game.drawCounter);
+        player.hand.push(cards);
+        game.drawCounter = 0;
+        nextPlayer();
+        updatePlayers();
+        callback({status: "success", message: "drew cards!"})
 
 
 
     });
-    socket.on("counter+2", (cards,identification,gameCode, callback) => {
+    socket.on("counter+2", (identification, gameCode, cards, callback) => {
         const game = games[gameCode]
         if (!isPlayersTurn(game,identification)) {
             callback({status: "failed", message:"It is not your turn!"})
@@ -151,7 +164,7 @@ export function initializeGameEventHandlers(socket) {
 
 
     });
-    socket.on("win",(identification,gameCode, callback) => {
+    socket.on("win",(identification, gameCode, callback) => {
         const game = games[gameCode]
         if (!isPlayersTurn(game,identification)) {
             callback({status: "failed", message:"It is not your turn!"})
@@ -170,8 +183,17 @@ export function initializeGameEventHandlers(socket) {
         const self = game.players.find(identification)
         const others = game.players.filter(player => player.id !== identification)
         others.map((other) => other.hand = other.hand.length)
-        callback({self: self, others: others, isFinished: game.isFinished})
+        callback({self: self, others: others, discardPile: game.discardPile[game.discardPile.length -1], isFinished: game.isFinished})
     })
+    socket.on("action",(identification, gameCode, action) => {
+        const game = games[gameCode];
+        if(action.colorChoice) {
+            game.discardPile[game.discardPile.length -1].color = action.colorChoice
+            nextPlayer(game);
+            updatePlayers(game);
+        }
+            
+    });
 }
 
 
@@ -186,7 +208,7 @@ function gameStartSetup(game) {
     game.direction = "clockwise";
     game.drawBehavior = "once"
 
-    var discardStartingCard = deck.pop;
+    var discardStartingCard = game.deck.pop;
     game.discardPile.push(discardStartingCard);
     updatePlayers(game);
     if(discardStartingCard.special) {
@@ -222,9 +244,9 @@ function nextPlayer(game) {
 function deliverDrawCounter(rank,gameCode) {
     const game = games[gameCode];
     if(rank === "+2")
-        game.player[game.playingIndex].socket.emit("drawTwo")
+        game.player[game.playingIndex].socket.emit("drawTwo",game.drawCounter)
     else
-        game.player[game.playingIndex].socket.emit("drawFour")
+        game.player[game.playingIndex].socket.emit("drawFour",game.drawCounter)
 
 }
 

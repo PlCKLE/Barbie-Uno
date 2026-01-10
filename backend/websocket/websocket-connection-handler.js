@@ -5,40 +5,45 @@ export const games = [];
 
 export function initializeWebSocketHandlers(websocketServer) {
     websocketServer.on("connection", (socket) => {
-        socket.emit("callbackRequest","", async(callback) => {
+        console.log("Someone connected!")
+        socket.emit("credentialsRequest","", async(response) => {
             initializeGameEventHandlers(socket);
-            if(callback.create) {
+            if(response.create) {
                 const game = {
                     gameCode: games.length,
-                    gameOwner: callback.identification,
+                    gameOwner: response.identification,
                     gameStarted: false,
-                    players: [{id: callback.identification, socket: socket}],
-                    gamePassword: callback.gamePassword,
+                    players: [{id: response.identification, socket: socket}],
+                    gamePassword: response.gamePassword,
                     spectators: [],
+                    isFinished: false,
+                    isStarted: false,
+                    discardPile: []
                 };
                 games.push(game);
+                socket.emit("gameCodeDelivery",game.gameCode)
             }
             else {
-                    attemptGameJoin(socket,callback);
+                    attemptGameJoin(socket,response);
             }
         })
     })
 }
 
 
-function attemptGameJoin(socket, callback) {
-    if (callback.gamecode > games.size) {
+function attemptGameJoin(socket, response) {
+    if (response.gamecode > games.size || response.gameCode === "" || response.gameCode == null) {
         socket.emit("gameNotExist","The game does not exist!")
         socket.disconnect(true);
     }
-    else if(games[callback.gamecode].isFinished) {
+    else if(games[response.gamecode].isFinished) {
         socket.emit("gameEnded","The game has already ended!")
         socket.disconnect(true);
     }
-    else if(games[callback.gamecode].isStarted) {
-        games[callback.gamecode].spectators.push({id: callback.identification, socket: socket});
+    else if(games[response.gamecode].isStarted) {
+        games[response.gamecode].spectators.push({id: response.identification, socket: socket});
     }
     else {
-        games[callback.gamecode].gamePlayers.push({id: callback.identification, socket: socket, hand: null, uno: false});
+        games[response.gamecode].gamePlayers.push({id: response.identification, socket: socket, hand: null, uno: false});
     }
 }
