@@ -32,7 +32,7 @@ export function initializeWebSocketHandlers(websocketServer) {
 
 
 function attemptGameJoin(socket, response) {
-    if (response.gamecode > games.size || response.gameCode === "" || response.gameCode == null) {
+    if (response.gameCode > games.length - 1 || response.gameCode === "" || response.gameCode == null) {
         socket.emit("gameNotExist","The game does not exist!")
         socket.disconnect(true);
     }

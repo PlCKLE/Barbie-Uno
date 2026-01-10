@@ -46,7 +46,7 @@ export function initializeGameEventHandlers(socket) {
             }
         })
         //If all checks pass, remove cards from hand and add it to discard pile.
-        if(validPlay && validStacking && cardExistsInHand) {
+        if(validPlay && validStacking && cardExistsInHand && game.canPlay) {
            game.players[game.playingIndex].hand = playerHand.filter(card => !cards.includes(card)) 
            cardsMinusFirstCard = cards.filter(card => card !== firstCard);
            game.discardPile = [firstCard, ...cardsMinusFirstCard, ...game.discardPile]
@@ -57,6 +57,10 @@ export function initializeGameEventHandlers(socket) {
             else if (uno) {
                 callback({uno: false})
             }
+        }
+        else {
+            callback({success: false})
+            return;
         }
 
         //Move onto the next player
@@ -105,7 +109,7 @@ export function initializeGameEventHandlers(socket) {
 
         const accusedPlayer = game.players.find((player) => player.id === accused);
         if(accusedPlayer.uno === false && accusedPlayer.hand.length === 1) {
-            accusedPlayer.hand.push(deal(game.deck,2));
+            deal(game.deck,2)((card) => accusedPlayer.hand.push(card));
             accusedPlayer.socket.emit("forceUpdate");
         }
         else {
@@ -122,7 +126,7 @@ export function initializeGameEventHandlers(socket) {
         }
         const player = game.players.find(player => player.id === identification)
         const cards = deal(game.deck,game.drawCounter);
-        player.hand.push(cards);
+        cards.map((card) => player.hand.push(card));
         game.drawCounter = 0;
         nextPlayer();
         updatePlayers();
@@ -146,7 +150,7 @@ export function initializeGameEventHandlers(socket) {
         }
         const player = game.players.find(player => player.id === identification)
         const cards = deal(game.deck,game.drawCounter);
-        player.hand.push(cards);
+        cards.map((card) => player.hand.push(card));
         game.drawCounter = 0;
         nextPlayer();
         updatePlayers();
@@ -180,10 +184,22 @@ export function initializeGameEventHandlers(socket) {
 
     socket.on("update", (identification, gameCode, callback) => {
         const game = games[gameCode];
-        const self = game.players.find(identification)
-        const others = game.players.filter(player => player.id !== identification)
-        others.map((other) => other.hand = other.hand.length)
-        callback({self: self, others: others, discardPile: game.discardPile[game.discardPile.length -1], isFinished: game.isFinished})
+        const self = game.players.find(player => player.id === identification);
+        const others = game.players.filter(player => player.id !== identification);
+        const clonedSelf = {...self}
+        const clonedOthers = [];
+        others.map((other) => {
+            clonedOthers.push({...other})
+        })
+
+        clonedOthers.map((other) => {
+            other.hand = other.hand.length;
+            other.identification = null;
+            other.socket = null;
+        });
+        clonedSelf.socket = null;
+        clonedSelf.identification = null;
+        callback({self: clonedSelf, others: clonedOthers, discardTopCard: game.discardPile[game.discardPile.length -1], isFinished: game.isFinished});
     })
     socket.on("action",(identification, gameCode, action) => {
         const game = games[gameCode];
@@ -208,7 +224,7 @@ function gameStartSetup(game) {
     game.direction = "clockwise";
     game.drawBehavior = "once"
 
-    var discardStartingCard = game.deck.pop;
+    var discardStartingCard = deal(game.deck,1);
     game.discardPile.push(discardStartingCard);
     updatePlayers(game);
     if(discardStartingCard.special) {

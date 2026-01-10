@@ -84,13 +84,19 @@ export function Socket() {
     }
     function update() {
         socket.emit("update",identification,gameCode,(response) => {
-            setLogs(logs + "\n" + "Update Recieved!\n Your Data: " + response.self
-                 + "\nOther's Data: " + response.others
-                  + "\nThe card of the discard pile is currently " + response.discardPile
+            var cardsString = "";
+            response.self.hand.map((card) => cardsString += " " + cardToString(card))
+            const discardTopCard = cardToString(response.discardTopCard)
+            setLogs(logs + "\n" + "Update Recieved!\n Your Data: "
+                 + "\nDeck:" + cardsString
+                 + "\nOther's Data: " + response.others //not finished
+                  + "\nThe card of the discard pile is currently " + discardTopCard
                    + "\nIs the game finished: " + response.isFinished)
         });
     }
     function emit() {
+        if(endpoint === "update")
+            return update();
         if(arg !== "" && arg2 !== "")
             socket.emit(endpoint,identification,gameCode,arg,arg2)
         else if(arg !== "")
@@ -127,5 +133,9 @@ export function Socket() {
                 gamePassword: gamePassword,
                 gameCode: gameCode
             })
+    }
+
+    function cardToString(card) { 
+     return card.color + " " + card.rank;
     }
 }

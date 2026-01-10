@@ -9,6 +9,7 @@ class Card {
         this.rank = rank;         // number like "1", "2", or the action "skip", "+4", "+2", "reverse", "changecolor"
     }
 
+    //When passed as a JSON, this function definition is lost.
     toString() {
         return this.color + " " + this.rank;
     }
@@ -52,6 +53,8 @@ export function shuffle(array) {
 }
 
 export function deal(deck, cardsDealt) {
+    if(cardsDealt == 1)
+        return deck.pop();
     const cards = [];
     for (let dealtIterator = 0; dealtIterator < cardsDealt; dealtIterator ++) {
         cards.push(deck.pop());
