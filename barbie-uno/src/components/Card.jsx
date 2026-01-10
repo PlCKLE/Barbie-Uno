@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react"
   let isDragging = true;
-export function Card({ value, color, cardIndex, left, top, imageLink}) {
+export function Card({ rank, color, cardIndex, left, top, imageLink}) {
   const cardRef = useRef(null);
   const [originalOffsetLeft, setOriginalOffsetLeft] = useState(null);
   const [originalOffsetTop,setOriginalOffsetTop] = useState(null);
