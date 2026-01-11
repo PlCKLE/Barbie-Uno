@@ -15,13 +15,15 @@ export function Game() {
     const [gameJoined,setGameJoined] = useState(false);
     const [create, setCreate] = useState(false);
     const [gamePassword,setGamePassword] = useState();
-    const navigate = useNavigate();
+    
     useEffect(() => {
         socket.on("credentialsRequest",callbackCredentials)
         socket.on("gameCodeDelivery",gameCodeDelivery);
+        console.log("Added sockets!")
         return () => {
             socket.off("credentialsRequest",callbackCredentials)
             socket.off("gameCodeDelivery",gameCodeDelivery)
+            console.log("Removed sockets!")
         }
     },[identification,gameCode])
 

@@ -86,6 +86,12 @@ export function initializeGameEventHandlers(socket) {
         const game = games[gameCode]
         if (!isPlayersTurn(game,identification)) {
             callback({status: "failed", message:"It is not your turn!"})
+            return
+        }
+        if (!game.isStarted) {
+            console.log("Has this game started? " + game.isStarted);
+            callback({status: "failed", message:"The game has not begun!"})
+            return
         }
         const player = game.players.find((player) => player.id == identification)
 
@@ -227,6 +233,8 @@ function gameStartSetup(game) {
 
     var discardStartingCard = deal(game.deck,1);
     game.discardPile.push(discardStartingCard);
+    game.isStarted = true;
+    console.log("A game has begun! " + game.isStarted);
     updatePlayers(game);
     if(discardStartingCard.special) {
         game.players[0].socket.emit("doAction","chooseColor");

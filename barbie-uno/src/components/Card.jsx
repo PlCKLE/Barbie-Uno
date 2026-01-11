@@ -1,24 +1,34 @@
 import { useEffect, useRef, useState } from "react"
   let isDragging = true;
-export function Card({ card, cardIndex, left, top, imageLink}) {
+
+const spriteWidth = 168
+const spriteHeight = 258
+export function Card({ card, cardIndex, left, top, disableDrag}) {
   const cardRef = useRef(null);
   const [originalOffsetLeft, setOriginalOffsetLeft] = useState(null);
   const [originalOffsetTop,setOriginalOffsetTop] = useState(null);
+  const [spriteX,setSpriteX] = useState("");
+  const [spriteY,setSpriteY] = useState("");
  
+  useEffect(() => {
+    setSpriteX(-calculateSpriteLocationX());
+    setSpriteY(-calculateSpriteLocationY());
+  },[card])
   useEffect(() => {
     setOriginalOffsetLeft(cardRef.current.offsetLeft);
     setOriginalOffsetTop(cardRef.current.offsetTop);
+    if(disableDrag)
+      cardRef.current.position = "static";
   },[])
   useEffect(() => {
-    injectDrag(cardRef.current);
+    if(!disableDrag)
+      injectDrag(cardRef.current);
   }, [originalOffsetTop])
 
 
    return (
-     <div ref={cardRef} className="Card" style={{left: left, top: top, zIndex: cardIndex}}>
-        <img width = "150px" height = "250px" src = {imageLink} />
-     </div>
-   )
+     <img src={null} width={spriteWidth} height={spriteHeight} ref={cardRef} className="Card" style={{left: left, top: top, zIndex: cardIndex, backgroundPositionX:spriteX, backgroundPositionY:spriteY}} />
+    )
 
 
 
@@ -30,7 +40,44 @@ export function Card({ card, cardIndex, left, top, imageLink}) {
 
 
    //Card Functions
-
+  function calculateSpriteLocationX() {
+    if(Number.isNaN(parseInt(card.rank))) {
+      switch (card.rank) {
+        case "skip":
+          return spriteWidth * 10
+        case "reverse":
+          return spriteWidth * 11
+        case "+2":
+          return spriteWidth * 12
+        case "changecolor":
+          return spriteWidth * 13
+        case "+4":
+          return spriteWidth * 14
+        case "barbie":
+          return spriteWidth * 15
+        default:
+          return spriteWidth * 0
+      }
+    }
+    else
+      return spriteWidth * card.rank
+  }
+  function calculateSpriteLocationY() {
+    switch (card.color) {
+        case "red":
+          return spriteHeight * 2
+        case "green":
+          return spriteHeight * 4
+        case "blue":
+          return spriteHeight * 3
+        case "yellow":
+          return spriteHeight * 1
+        case "wild":
+          return spriteHeight * 0
+        default:
+          return spriteHeight * 0
+    }
+  }
 
    //Card Drag functions
   function doNothing() {

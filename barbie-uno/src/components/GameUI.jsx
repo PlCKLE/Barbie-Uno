@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Card } from "./Card"
 
-const imageLink = "https://images.ctfassets.net/l7h59hfnlxjx/582Lx8AhvXHgRLXagk73lV/ef827f6b381202b112b61e218d8e3154/President_Obama_Headshot__Economic_Inclusion___Photo_by_Pari_Dukovic_courtesy_of_Penguin_Random_House_.jpg?q=75&w=1014&fm=webp"
 export function GameUI({identification, gameCode, socket}) {
     const [hand,setHand] = useState([])
     const [uno,setUno] = useState(false)
@@ -17,19 +16,24 @@ export function GameUI({identification, gameCode, socket}) {
             uninitializeSocketEvents(socket);
         }
     },[uno,selectedCards])
-
+    useEffect(() => {
+        console.log("These cards are currently selected: ")
+        console.log(selectedCards)
+    
+    },[selectedCards])
 
     return (
         <div>
+            <h2>Gamecode : {gameCode}</h2>
             <button onClick={startGame}>Start Game</button>
             <button onClick={playHand}>Play Hand</button>
             <button onClick={draw}> Draw </button>
             <button onClick={callUno}> Uno </button>
-            <Card rank={discardTopCard.rank} color={discardTopCard.color} />
-            <div className="playerHand">
-                {hand.map((card) => (<Card key="" onClick={(element) => {selectHandler(card, element)}} card={card} imageLink={imageLink}/>))}
+            <Card className="discardCard" key="discard" card={discardTopCard} disableDrag={true} />
+            <div className="playerHand" width="2000px" height="2000px">
+                {hand.map((card, index) => (<Card key={index} onClick={(element) => {selectHandler(card, element)}} card={card} disableDrag={true}/>))}
             </div>
-            {logs.map((log) => (<p>{log}</p>))}
+            {logs.map((log,index) => (<p key={index}>{log}</p>))}
         </div>
     )
 
@@ -128,9 +132,9 @@ export function GameUI({identification, gameCode, socket}) {
     function update() {
             socket.emit("update",identification,gameCode,(response) => {
                 setHand(response.self.hand);
-                setDiscardTopCard(response.discardTopCard);
-                insertLog("Card amounts of other players!")
-                response.others.map((other) => {insertLog(other.identification + "has " + other.hand + "cards!")})
+                setDiscardTopCard({...response.discardTopCard});
+                insertLog("Card amounts of other players!");
+                response.others.map((other) => {insertLog(other.identification + "has " + other.hand + "cards!")});
         })
     }
 }

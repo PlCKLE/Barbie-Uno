@@ -1,7 +1,10 @@
 .Card {
     position: absolute;
+    background-image: url("../public/sprite_sheet.png")
 }
 .playerHand {
     display: flex;
-    gap: 40px;
+    justify-content: center;
+    align-items: center;
+    gap: 200px;
 }
