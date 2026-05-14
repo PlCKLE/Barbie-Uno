@@ -5,8 +5,8 @@ export function Home() {
     return (
         <div>
             <h1>Welcome to Barbie Uno!</h1>
-            <button onClick={() => {navigate("/game")}}>Click me to see sample game!</button>
-            <button onClick={() => {navigate("/socket")}}>Click me to use the websocket app.</button>
+            <button onClick={() => {navigate("/game")}}>Click me to create/join a game!</button>
+            <button onClick={() => {navigate("/socket")}}>WEBSOCKET DEBUG AREA.</button>
         </div>
     )
 }

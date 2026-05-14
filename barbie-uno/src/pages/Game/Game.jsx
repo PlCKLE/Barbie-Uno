@@ -44,7 +44,7 @@ export function Game() {
                     </div>
                     */
                     }
-                    <p>Create a new game?</p>
+                    <p>Check box to create a new game. Unchecked means you're joining</p>
                     <input type="checkbox" placeholder="create?" value={create} onChange={changeCreate} />
                     <input placeholder="gameCode" value={gameCode} onChange={changeGameCode}/>
                     <input placeholder="Identification" value={identification} onChange={changeIdentification}/>
