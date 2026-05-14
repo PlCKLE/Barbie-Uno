@@ -5,44 +5,48 @@ import { deal } from "./game-logic.js"
 
 export function initializeGameEventHandlers(socket) {
 
-
+    const game = games[gameCode]
     socket.on("startGame", (identification, gameCode) => {
-        if(games[gameCode].gameOwner != identification) {
+        if(game.gameOwner != identification) {
             socket.emit("startFailure", "You are not the owner of this game!");
         }
+        else if (game.isStarted == true) {
+            socket.emit("startFailure", "The game has already started!")
+        }
         else {
-            games[gameCode].players.map((player => {
+            game.players.map((player => {
                 player.socket.emit("gameStart");
             }))
-            gameStartSetup(games[gameCode])
+            gameStartSetup(game)
         }
     });
 
 
     socket.on("playCards",(identification, gameCode, cards, uno, callback) => {
-        const game = games[gameCode]
         if (!isPlayersTurn(game,identification)) {
             callback({status: "failed", message:"It is not your turn!"})
         }
 
         const playerHand = game.players.find((player) => player.id == identification).hand;
         var validPlay = false;
-        var validStacking = true;
-        var cardExistsInHand = true;
+        var validStacking = false;
+        var cardExistsInHand = false;
         var firstCard = null;
+
+        //If stacking is available, players may send multiple cards to play.
         cards.map((card) => {
-            //check to see if card can be played on current discard pile
-            if (game.discardPile[0].rank == card.rank || game.discardPile[0].color == card.color || card.color == "wild") {
+            //check to see if card can be played on current discard pile ()
+            if (game.discardPile[0].rank == card.rank || game.discardPile[0].color == card.color || card.color == "wild" && game.drawCounter == 0) {
                 validPlay = true;
                 firstCard = card;
             }
             //check to see if cards being discarded are identical (same color and rank stacking rule)
-            if (cards[0].rank != card.rank || cards[0].color != card.color) {
-                validStacking = false;
+            if (cards[0].rank == card.rank || cards[0].color == card.color) {
+                validStacking = true;
             }
             //check to see if cards being discarded actually exist in the players hand.
-            if(playerHand.find((handCard) => handCard == card) === undefined) {
-                cardExistsInHand = false;
+            if(playerHand.find((handCard) => handCard == card) != undefined) {
+                cardExistsInHand = true;
             }
         })
         //If all checks pass, remove cards from hand and add it to discard pile.
@@ -51,7 +55,7 @@ export function initializeGameEventHandlers(socket) {
            cardsMinusFirstCard = cards.filter(card => card !== firstCard);
            game.discardPile = [firstCard, ...cardsMinusFirstCard, ...game.discardPile]
         
-            //This uno implementation can be done better. Maybe as a different event.
+            //This uno implementation can be done better. Maybe as a different event, since you can call uno after playing your hand.
            if(uno && player.hand.length <= 1) {
                 callback({uno: true})
             }
@@ -60,7 +64,7 @@ export function initializeGameEventHandlers(socket) {
             }
         }
         else {
-            callback({success: false})
+            callback({success: false}) 
             return;
         }
 
@@ -68,7 +72,6 @@ export function initializeGameEventHandlers(socket) {
         nextPlayer(game);
 
         //If the discarded cards were plus two or four, deliver that to the next player.
-        updatePlayers(game);
         if(firstCard.rank === "+2") {
             game.drawCounter = 2 * cards.length
             deliverDrawCounter("+2");
@@ -77,19 +80,17 @@ export function initializeGameEventHandlers(socket) {
             game.drawCounter = 4 * cards.length
             deliverDrawCounter("+4");
         }
-        
+        updatePlayers(game);
     });
 
 
     socket.on("draw", (identification, gameCode, forced, callback) => {
         //WARNING: No validation if the hand is actually forced or not. Leaves an avenue for cheating.
-        const game = games[gameCode]
         if (!isPlayersTurn(game,identification)) {
             callback({status: "failed", message:"It is not your turn!"})
             return
         }
         if (!game.isStarted) {
-            console.log("Has this game started? " + game.isStarted);
             callback({status: "failed", message:"The game has not begun!"})
             return
         }
@@ -104,16 +105,14 @@ export function initializeGameEventHandlers(socket) {
             return;
         }
         else if(forced) {
-            //code that draws till card is found.
+            //code that draws till card is found. Maybe follow game uno style that makes it so everyone can see someone suffer. >:)
         }
         nextPlayer(game);
         updatePlayers(game);
 
     })
     socket.on("accuseUno", (identification, gameCode, accused, callback) => {
-        //actions that do not require a turn do not currently check for identification. This does mean anyone can accuse of uno, even if they aren't in the game. TOFIX later.
-        const game = games[gameCode]
-
+        //TODO actions that do not require a turn do not currently check for identification. This does mean anyone can accuse of uno, even if they aren't in the game. TOFIX later.
         const accusedPlayer = game.players.find((player) => player.id === accused);
         if(accusedPlayer.uno === false && accusedPlayer.hand.length === 1) {
             deal(game.deck,2)((card) => accusedPlayer.hand.push(card));
@@ -127,7 +126,6 @@ export function initializeGameEventHandlers(socket) {
 
     })
     socket.on("accept+4", (identification, gameCode, callback) => {
-        const game = games[gameCode]
         if (!isPlayersTurn(game,identification)) {
             callback({status: "failed", message:"It is not your turn!"})
         }
@@ -137,21 +135,19 @@ export function initializeGameEventHandlers(socket) {
         game.drawCounter = 0;
         nextPlayer();
         updatePlayers();
-
+        //I mean are these really necessary? We can just do this in the "Draw" socket event.
 
 
     })
     socket.on("counter+4", (identification, gameCode, cards, callback) => {
-        const game = games[gameCode]
         if (!isPlayersTurn(game,identification)) {
             callback({status: "failed", message:"It is not your turn!"})
         }
-
+        //TODO: Finish lol
         
 
     })
     socket.on("accept+2", (identification,gameCode, callback) => {
-        const game = games[gameCode]
         if (!isPlayersTurn(game,identification)) {
             callback({status: "failed", message:"It is not your turn!"})
         }
@@ -162,35 +158,33 @@ export function initializeGameEventHandlers(socket) {
         nextPlayer();
         updatePlayers();
         callback({status: "success", message: "drew cards!"})
+        //I mean are these really necessary? We can just do this in the "Draw" socket event.
 
 
 
     });
     socket.on("counter+2", (identification, gameCode, cards, callback) => {
-        const game = games[gameCode]
         if (!isPlayersTurn(game,identification)) {
             callback({status: "failed", message:"It is not your turn!"})
         }
-
+        //TODO: Finish
 
 
     });
     socket.on("win",(identification, gameCode, callback) => {
-        const game = games[gameCode]
         if (!isPlayersTurn(game,identification)) {
             callback({status: "failed", message:"It is not your turn!"})
         }
 
 
-        //if draw two or four, give chance for players to attack around lol
+        //TODO: if draw two or four, give chance for players to attack around lol
         //perhaps dont include this as a different event and instead just put it in the play hand event.
     })
     socket.on("endGame", (identification,gameCode) => {
-
+        //TODO: ..Finish
     })
 
     socket.on("update", (identification, gameCode, callback) => {
-        const game = games[gameCode];
         const self = game.players.find(player => player.id === identification);
         const others = game.players.filter(player => player.id !== identification);
         const clonedSelf = {...self}
@@ -201,15 +195,22 @@ export function initializeGameEventHandlers(socket) {
 
         clonedOthers.map((other) => {
             other.hand = other.hand.length;
-            //other.identification = null; // GUACAMOLE huge levels of risk, as identification is used to identify players. However, for the sake of having a name it will be given. DO NOT SHIP WITHOUT THIS FIXED
+            //other.identification = null; // GUACAMOLE huge levels of risk, as identification is used to identify players. However, for the sake of having a name it will be given. DO NOT SHIP THIS AS COMMENTED WITHOUT THIS FIXED
             other.socket = null;
         });
         clonedSelf.socket = null;
         clonedSelf.identification = null;
-        callback({self: clonedSelf, others: clonedOthers, discardTopCard: game.discardPile[game.discardPile.length -1], isFinished: game.isFinished});
+        callback({self: clonedSelf, others: clonedOthers, discardTopCard: game.discardPile[game.discardPile.length -1], isFinished: game.isFinished, drawCounter: game.drawCounter});
+        /* TODO: This callback :
+          - Doesn't show what other cards other than the last were played.
+         Should be fixed before shipping so that players can see ALL cards that were played in a turn.
+         */
+        
     })
     socket.on("action",(identification, gameCode, action) => {
-        const game = games[gameCode];
+        //This event can be used for other actions, such as betting. in barbie uno gamemode
+
+        //If game starts with a wild / +4 card.
         if(action.colorChoice) {
             game.discardPile[game.discardPile.length -1].color = action.colorChoice
             nextPlayer(game);
@@ -229,12 +230,12 @@ function gameStartSetup(game) {
                 player.hand = deal(game.deck,5);
             }));
     game.direction = "clockwise";
-    game.drawBehavior = "once"
+    game.drawBehavior = "once" //TODO: Should be based on game settings.
 
     var discardStartingCard = deal(game.deck,1);
     game.discardPile.push(discardStartingCard);
     game.isStarted = true;
-    console.log("A game has begun! " + game.isStarted);
+    console.log("A game has begun! ");
     updatePlayers(game);
     if(discardStartingCard.special) {
         game.players[0].socket.emit("doAction","chooseColor");
@@ -267,7 +268,6 @@ function nextPlayer(game) {
 }
 
 function deliverDrawCounter(rank,gameCode) {
-    const game = games[gameCode];
     if(rank === "+2")
         game.player[game.playingIndex].socket.emit("drawTwo",game.drawCounter)
     else
@@ -276,6 +276,7 @@ function deliverDrawCounter(rank,gameCode) {
 }
 
 function updatePlayers(game) {
+    //This is a little lazy... but it should be okay. Keeps it all in one function anyway, so maybe it's also better.
     game.players.map((player) => {
         player.socket.emit("forceUpdate");
     })
